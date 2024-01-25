@@ -16,6 +16,11 @@ namespace Project1.Data.Systems.GUI
         private List<HudNode> _children;
         private bool _registered;
 
+        public HudNode()
+        {
+            _children = new List<HudNode>();
+        }
+
         public HudNode(HudNode parent)
         {
             _children = new List<HudNode>();
@@ -41,13 +46,21 @@ namespace Project1.Data.Systems.GUI
         public virtual void PreLayout(bool force)
         {
             if (Visible || force)
+            {
                 Layout();
+                foreach (var x in Children)
+                    x.PreLayout(force);
+            }
         }
 
         public virtual void PreDraw()
         {
             if (Visible)
+            {
                 Draw();
+                foreach(var x in Children)
+                    x.PreDraw();
+            }
         }
 
         public abstract void Layout();

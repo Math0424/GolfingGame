@@ -17,17 +17,29 @@ namespace Project1.Data
         private static FieldInfo worldField = typeof(SystemComponent).GetField("_world", BindingFlags.Instance | BindingFlags.NonPublic);
 
         public string WorldName { get; private set; }
+        public Action GameFocused;
+        public Game Game { private set; get; }
+
         private SparceIndexedList<Entity> _entities;
         private Dictionary<Type, List<EntityComponent>> _components;
         private Dictionary<Type, SystemComponent> _systems;
+        private bool _focused;
 
-        public World(string name) 
+        public World(Game game, string name) 
         {
+            Game = game;
             WorldName = name;
+            
+            _focused = game.IsActive;
             _entities = new SparceIndexedList<Entity>();
             _components = new Dictionary<Type, List<EntityComponent>>();
             _systems = new Dictionary<Type, SystemComponent>();
         }
+
+        /// <summary>
+        /// Hot path for getting the render, will crash if none are loaded
+        /// </summary>
+        public RenderingSystem Render => (RenderingSystem)_systems[typeof(RenderingSystem)];
 
         public World AddSystem(SystemComponent system)
         {
@@ -96,6 +108,13 @@ namespace Project1.Data
 
         public void Update(GameTime deltaTime)
         {
+            if (_focused != Game.IsActive)
+            {
+                _focused = Game.IsActive;
+                if (Game.IsActive)
+                    GameFocused?.Invoke();
+            }
+
             foreach (var x in _systems.Values)
                 x.Update(deltaTime);
         }

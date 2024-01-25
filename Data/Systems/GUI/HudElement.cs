@@ -23,7 +23,7 @@ namespace Project1.Data.Systems.GUI
 
         public override void Layout()
         {
-
+            
         }
 
         private void GetForcedLayout()

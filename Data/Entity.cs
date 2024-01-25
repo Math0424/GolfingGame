@@ -15,12 +15,12 @@ namespace Project1.Data
         private static FieldInfo entityField = typeof(EntityComponent).GetField("_entity", BindingFlags.Instance | BindingFlags.NonPublic);
 
         public int Id { get; set; }
-        private World _world;
+        public World World { get; private set; }
         private Dictionary<Type, EntityComponent> _components;
 
         public Entity(World world)
         {
-            _world = world;
+            World = world;
             _components = new Dictionary<Type, EntityComponent>();
         }
 
@@ -36,8 +36,9 @@ namespace Project1.Data
         public Entity AddComponent<T>(T obj) where T : EntityComponent
         {
             _components[typeof(T)] = obj;
-            _world.RegisterEntityComponent(obj);
+            World.RegisterEntityComponent(obj);
             entityField.SetValue(obj, this);
+            obj.Initalize();
             return this;
         }
 
@@ -52,7 +53,7 @@ namespace Project1.Data
         {
             if (_components.ContainsKey(t))
             {
-                _world.UnRegisterEntityComponent(_components[t]);
+                World.UnRegisterEntityComponent(_components[t]);
                 _components.Remove(t);
             }
         }
@@ -61,7 +62,7 @@ namespace Project1.Data
             foreach(var x in _components)
             {
                 x.Value.Close();
-                _world.UnRegisterEntityComponent(x.Value);
+                World.UnRegisterEntityComponent(x.Value);
             }
             _components.Clear();
         }

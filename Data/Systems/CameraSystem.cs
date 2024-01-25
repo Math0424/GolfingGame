@@ -40,7 +40,7 @@ namespace Project1.Data.Systems
         {
             _aspectRatio = aspectRatio;
             this.FOV = FOV;
-            _projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(FOV), aspectRatio, 0.1f, 1000f);
+            _projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(FOV), aspectRatio, 0.1f, 50f);
             return this;
         }
 
@@ -89,11 +89,6 @@ namespace Project1.Data.Systems
         {
             Matrix matrix = Matrix.Invert(_worldMatrix * _viewMatrix * _projectionMatrix);
             return Vector3.Transform(screenPos, matrix);
-        }
-
-        public override void Draw(GameTime delta)
-        {
-
         }
 
         public override void Update(GameTime delta)

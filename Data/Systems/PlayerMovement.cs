@@ -13,22 +13,42 @@ namespace Project1.Data.Systems
         private int _prevScrollWheel = 0;
         private float yaw = 0, pitch = 0;
         public bool Controlling = true;
+        private int JustFocused = 0;
 
-        public override void Draw(GameTime delta) { }
+        public override void Initalize()
+        {
+            _world.GameFocused += CenterCursor;
+        }
+
+        public override void Close()
+        {
+            _world.GameFocused -= CenterCursor;
+        }
+
+        private void CenterCursor()
+        {
+            JustFocused = 5;
+        }
 
         public override void Update(GameTime deltaTime)
         {
-            if (!Controlling)
+            if (!Controlling || !_world.Game.IsActive)
                 return;
 
             var cam = _world.GetSystem<CameraSystem>();
             float delta = (float)deltaTime.ElapsedGameTime.TotalSeconds;
             
-            var bounds = GolfGame.Instance.GraphicsDevice.Viewport.Bounds;
+            var bounds = _world.Game.GraphicsDevice.Viewport.Bounds;
             var mousePos = Mouse.GetState().Position;
             float xdelta = (mousePos.X - (bounds.Width / 2)) * delta * 3f;
             float ydelta = (mousePos.Y - (bounds.Height / 2)) * delta * 3f;
             Mouse.SetPosition(bounds.Width / 2, bounds.Height / 2);
+
+            if (JustFocused > 0)
+            {
+                JustFocused--;
+                return;
+            }
 
             yaw -= xdelta;
             pitch -= ydelta;

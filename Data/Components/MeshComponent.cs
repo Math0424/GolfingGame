@@ -21,7 +21,7 @@ namespace Project1.Data.Components
         public string Model
         {
             get => _modelName;
-            set => SetModel(_cm, value);
+            set => SetModel(value);
         }
         public Vector3 MeshCenter
         {
@@ -29,16 +29,19 @@ namespace Project1.Data.Components
         }
 
         private Vector3 _center;
-        private ContentManager _cm;
         private string _modelName;
         private Model _model;
 
-        public MeshComponent(ContentManager manager, string modelname)
+        public MeshComponent(string modelname)
         {
-            _cm = manager;
-            SetModel(_cm, modelname);
+            _modelName = modelname;
         }
-        
+
+        public override void Initalize()
+        {
+            SetModel(_modelName);
+        }
+
         public override bool IsVisible(ref BoundingFrustum frustum)
         {
             var pos = _entity.Position;
@@ -52,7 +55,7 @@ namespace Project1.Data.Components
             _model.Draw(pos.TransformMatrix, viewMatrix, projectionMatrix);
         }
 
-        private void SetModel(ContentManager manager, string name)
+        private void SetModel(string name)
         {
             _modelName = name;
             if (cache.ContainsKey(name))
@@ -61,7 +64,7 @@ namespace Project1.Data.Components
                 ModelAABB = cache[name].boundingBox;
                 return;
             }
-            _model = manager.Load<Model>(name);
+            _model = _entity.World.Game.Content.Load<Model>(name);
             CalculateBoundingBox();
             cache[name] = (_model, ModelAABB);
         }

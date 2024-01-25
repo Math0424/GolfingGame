@@ -10,6 +10,7 @@ namespace Project1.Data
     internal abstract class EntityComponent
     {
         protected readonly Entity _entity;
+        public virtual void Initalize() { }
         public virtual void Close() {}
     }
 

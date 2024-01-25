@@ -12,19 +12,23 @@ namespace Project1.Data.Components
         // avoid passing struct clones, use refs
         public ref Matrix LocalMatrix => ref _localMatrix;
         public ref Matrix WorldMatrix => ref _worldMatrix;
-        public ref Vector3 Position => ref _position;
         public ref Matrix TransformMatrix => ref _transformMatrix;
+        public Vector3 Position => _worldMatrix.Translation;
 
         private Matrix _transformMatrix;
         private Matrix _localMatrix;
         private Matrix _worldMatrix;
-        private Vector3 _position;
+
+        public PositionComponent(Vector3 Pos) : this()
+        {
+            _worldMatrix.Translation = Pos;
+            _transformMatrix = _localMatrix * _worldMatrix;
+        }
 
         public PositionComponent()
         {
             _localMatrix = Matrix.Identity;
             _worldMatrix = Matrix.Identity;
-            _position = Vector3.Zero;
             _transformMatrix = _localMatrix * _worldMatrix;
         }
 
@@ -42,7 +46,7 @@ namespace Project1.Data.Components
 
         public void SetPosition(Vector3 vector)
         {
-            _position = vector;
+            _worldMatrix.Translation = vector;
         }
 
         public void Scale(float scale)
