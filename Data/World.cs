@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -11,6 +12,8 @@ namespace Project1.Data
 {
     internal class World
     {
+        private static FieldInfo worldField = typeof(SystemComponent).GetField("_world", BindingFlags.Instance | BindingFlags.NonPublic);
+
         public string WorldName { get; private set; }
         private SparceIndexedList<Entity> _entities;
         private Dictionary<Type, List<EntityComponent>> _components;
@@ -26,7 +29,7 @@ namespace Project1.Data
 
         public World AddSystem(SystemComponent system)
         {
-            system.GetType().GetField("_world", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(system, this);
+            worldField.SetValue(system, this);
             _systems[system.GetType()] = system;
             return this;
         }
@@ -36,12 +39,12 @@ namespace Project1.Data
             return _entities[Id];
         }
 
-        public T[] GetEntityComponents<T> () where T : EntityComponent
+        public unsafe T[] GetEntityComponents<T> () where T : EntityComponent
         {
             if (_components.ContainsKey(typeof(T)))
             {
                 // TODO : this might be too slow
-                return (T[])_components[typeof(T)].ToArray();
+                return Unsafe.As<T[]>(_components[typeof(T)].ToArray());
             }
             return null;
         }
@@ -58,6 +61,11 @@ namespace Project1.Data
         public T RegisterEntityComponent<T>(T component) where T : EntityComponent
         {
             Type t = typeof(T);
+            
+            //TODO : figure a way to remove this silly hack
+            if (t.BaseType != typeof(EntityComponent))
+                t = t.BaseType;
+            
             if (!_components.ContainsKey(t))
                 _components[t] = new List<EntityComponent>();
             _components[t].Add(component);

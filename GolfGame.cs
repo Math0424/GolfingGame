@@ -9,15 +9,19 @@ namespace Project1
 {
     public class GolfGame : Game
     {
+        public static GolfGame Instance => _instance;
+        private static GolfGame _instance;
         private World _world;
 
         public GolfGame()
         {
+            _instance = this;
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
 
             _world = new World("Level1")
                 .AddSystem(new CameraSystem(true))
+                .AddSystem(new PlayerMovement())
                 .AddSystem(new RenderingSystem(this));
         }
 
@@ -31,8 +35,7 @@ namespace Project1
         {
             Entity player = _world.CreateEntity()
                 .AddComponent(new PositionComponent())
-                .AddComponent(new MeshComponent(Content, "model"));
-            
+                .AddComponent(new MeshComponent(Content, "models/Destroyer"));
         }
 
         protected override void Update(GameTime gameTime)

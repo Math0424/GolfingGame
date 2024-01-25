@@ -4,6 +4,7 @@ using Project1.Data.Components;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -11,6 +12,8 @@ namespace Project1.Data
 {
     internal class Entity
     {
+        private static FieldInfo entityField = typeof(EntityComponent).GetField("_entity", BindingFlags.Instance | BindingFlags.NonPublic);
+
         public int Id { get; set; }
         private World _world;
         private Dictionary<Type, EntityComponent> _components;
@@ -34,13 +37,14 @@ namespace Project1.Data
         {
             _components[typeof(T)] = obj;
             _world.RegisterEntityComponent(obj);
+            entityField.SetValue(obj, this);
             return this;
         }
 
         public T GetComponent<T>() where T : EntityComponent
         {
             if (!_components.ContainsKey(typeof(T)))
-                throw new Exception($"Component type '{typeof(T)}' not on entity {Id}");
+                return null;
             return (T)_components[typeof(T)];
         }
 
