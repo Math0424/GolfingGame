@@ -11,25 +11,34 @@ namespace Project1.Data.Systems
     internal class PlayerMovement : SystemComponent
     {
         private int _prevScrollWheel = 0;
+        private float yaw = 0, pitch = 0;
+        public bool Controlling = true;
 
         public override void Draw(GameTime delta) { }
 
         public override void Update(GameTime deltaTime)
         {
-            var cam = _world.GetSystem<CameraSystem>();
-            Matrix m = cam.WorldMatrix;
+            if (!Controlling)
+                return;
 
+            var cam = _world.GetSystem<CameraSystem>();
             float delta = (float)deltaTime.ElapsedGameTime.TotalSeconds;
+            
             var bounds = GolfGame.Instance.GraphicsDevice.Viewport.Bounds;
             var mousePos = Mouse.GetState().Position;
-
-            float xdelta = (mousePos.X - (bounds.Width / 2)) * delta * .03f;
-            float ydelta = (mousePos.Y - (bounds.Height / 2)) * delta * .03f;
-
+            float xdelta = (mousePos.X - (bounds.Width / 2)) * delta * 3f;
+            float ydelta = (mousePos.Y - (bounds.Height / 2)) * delta * 3f;
             Mouse.SetPosition(bounds.Width / 2, bounds.Height / 2);
 
-            m.Translation = Vector3.Zero;
-            m *= Matrix.CreateFromYawPitchRoll(xdelta, ydelta, 0);
+            yaw -= xdelta;
+            pitch -= ydelta;
+
+            if (pitch > 89.0f)
+                pitch = 89.0f;
+            if (pitch < -89.0f)
+                pitch = -89.0f;
+
+            Matrix m = Matrix.CreateFromYawPitchRoll(MathHelper.ToRadians(yaw), MathHelper.ToRadians(pitch), 0);
             m.Translation = cam.Translation;
 
             delta *= 2.0f;

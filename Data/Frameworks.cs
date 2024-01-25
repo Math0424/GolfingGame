@@ -17,7 +17,6 @@ namespace Project1.Data
     {
         protected readonly World _world;
         public virtual void Initalize() {}
-        public abstract void Draw(GameTime delta);
         public abstract void Update(GameTime delta);
         public virtual void Close() {}
     }

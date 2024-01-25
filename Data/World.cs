@@ -1,5 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Project1.Data.Systems;
+using Project1.Data.Systems.GUI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -96,18 +98,17 @@ namespace Project1.Data
         {
             foreach (var x in _systems.Values)
                 x.Update(deltaTime);
-            //foreach(var x in _components.Keys)
-            //    foreach(var y in _components[x])
-            //        y.Update(deltaTime);
         }
 
         public void Draw(GameTime deltaTime)
         {
-            foreach (var x in _systems.Values)
-                x.Draw(deltaTime);
-            //foreach (var x in _components.Keys)
-            //    foreach (var y in _components[x])
-            //        y.Draw(deltaTime);
+            // world render
+            if (_systems.ContainsKey(typeof(RenderingSystem)))
+                ((RenderingSystem)_systems[typeof(RenderingSystem)]).Draw(deltaTime);
+
+            // hud render
+            if (_systems.ContainsKey(typeof(HudSystem)))
+                ((HudSystem)_systems[typeof(HudSystem)]).Draw(deltaTime);
         }
 
         public void Close()
