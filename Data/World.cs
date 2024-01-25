@@ -19,6 +19,7 @@ namespace Project1.Data
         public string WorldName { get; private set; }
         public Action GameFocused;
         public Game Game { private set; get; }
+        public int EntityCount => _entities.Count;
 
         private SparceIndexedList<Entity> _entities;
         private Dictionary<Type, List<EntityComponent>> _components;

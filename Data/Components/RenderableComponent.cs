@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,7 @@ namespace Project1.Data.Components
     {
         public bool Visible = true;
         public abstract bool IsVisible(ref BoundingFrustum frustum);
-        public abstract void Draw(ref Matrix viewMatrix, ref Matrix projectionMatrix);
+        public abstract void Draw3D(ref Matrix viewMatrix, ref Matrix projectionMatrix);
+        public virtual void DebugDraw(ref SpriteBatch batch, ref Matrix viewMatrix, ref Matrix projectionMatrix) { }
     }
 }

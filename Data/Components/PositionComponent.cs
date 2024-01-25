@@ -22,37 +22,43 @@ namespace Project1.Data.Components
         public PositionComponent(Vector3 Pos) : this()
         {
             _worldMatrix.Translation = Pos;
-            _transformMatrix = _localMatrix * _worldMatrix;
+            UpdateTransformMatrix();
         }
 
         public PositionComponent()
         {
             _localMatrix = Matrix.Identity;
             _worldMatrix = Matrix.Identity;
-            _transformMatrix = _localMatrix * _worldMatrix;
+            UpdateTransformMatrix();
         }
 
         public void SetWorldMatrix(Matrix matrix)
         {
             _worldMatrix = matrix;
-            _transformMatrix = _localMatrix * _worldMatrix;
+            UpdateTransformMatrix();
         }
 
         public void SetLocalMatrix(Matrix matrix)
         {
             _localMatrix = matrix;
-            _transformMatrix = _localMatrix * _worldMatrix;
+            UpdateTransformMatrix();
         }
 
         public void SetPosition(Vector3 vector)
         {
             _worldMatrix.Translation = vector;
+            UpdateTransformMatrix();
         }
 
         public void Scale(float scale)
         {
             Matrix s = Matrix.CreateScale(scale);
             _localMatrix *= s;
+            UpdateTransformMatrix();
+        }
+
+        private void UpdateTransformMatrix()
+        {
             _transformMatrix = _localMatrix * _worldMatrix;
         }
 

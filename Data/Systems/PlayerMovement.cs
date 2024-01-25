@@ -63,7 +63,7 @@ namespace Project1.Data.Systems
 
             delta *= 2.0f;
             if (Keyboard.GetState().IsKeyDown(Keys.LeftShift))
-                delta *= 2.0f;
+                delta *= 10.0f;
 
             if (Keyboard.GetState().IsKeyDown(Keys.W))
                 m.Translation += cam.Forward * delta;

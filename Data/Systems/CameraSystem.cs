@@ -21,6 +21,8 @@ namespace Project1.Data.Systems
         private Matrix _worldMatrix;
         private Matrix _projectionMatrix;
         private float _aspectRatio;
+        private int _height;
+        private int _width;
 
         public Vector3 Right => _worldMatrix.Right;
         public Vector3 Left => _worldMatrix.Left;
@@ -32,41 +34,46 @@ namespace Project1.Data.Systems
 
         public CameraSystem(bool smoothing)
         {
+            _height = 480;
+            _width = 800;
             SetViewMatrix(Matrix.CreateLookAt(new Vector3(0, 0, 10), new Vector3(0, 0, 0), Vector3.UnitY));
-            SetupProjection(90, 1);
+            SetupProjection(_width, _height, 1);
         }
 
-        public CameraSystem SetupProjection(float aspectRatio, float FOV)
+        public CameraSystem SetupProjection(int width, int height, float FOV)
         {
-            _aspectRatio = aspectRatio;
+            _aspectRatio = (float)width / height;
+            this._height = height;
+            this._width = width;
             this.FOV = FOV;
-            _projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(FOV), aspectRatio, 0.1f, 50f);
+
+            _projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(FOV), _aspectRatio, 0.1f, 100f);
             return this;
         }
 
         public CameraSystem SetupProjection(float FOV)
         {
-            SetupProjection(_aspectRatio, FOV);
+            SetupProjection(_width, _height, FOV);
             return this;
         }
 
         public CameraSystem SetupOrthographic(float width, float height)
         {
-            _projectionMatrix = Matrix.CreateOrthographic(width, height, 0.1f, 1000f);
+            _projectionMatrix = Matrix.CreateOrthographic(width, height, 0.1f, 100f);
             return this;
         }
 
         public void SetViewMatrix(Matrix matrix)
         {
             _viewMatrix = matrix;
-            _worldMatrix = Matrix.Invert(_viewMatrix);
+            Matrix.Invert(ref _viewMatrix, out _worldMatrix);
             _frustum = new BoundingFrustum(_viewMatrix * _projectionMatrix);
         }
 
         public void SetWorldMatrix(Matrix matrix)
         {
             _worldMatrix = matrix;
-            _viewMatrix = Matrix.Invert(_worldMatrix);
+            Matrix.Invert(ref _worldMatrix, out _viewMatrix);
             _frustum = new BoundingFrustum(_viewMatrix * _projectionMatrix);
         }
 
@@ -77,14 +84,16 @@ namespace Project1.Data.Systems
 
         public void SetFOV(float fov)
         {
-            SetupProjection(_aspectRatio, Math.Clamp(fov, 1, 179));
+            SetupProjection(_width, _height, Math.Clamp(fov, 1, 179));
         }
 
-        public Vector3 WorldToScreen(ref Vector3 worldPos)
+        public Vector2 WorldToScreen(ref Vector3 worldPos)
         {
-            return Vector3.Transform(worldPos, _viewMatrix);
+            Vector3 pos = Vector3.Normalize(Vector3.Transform(worldPos, _viewMatrix * _projectionMatrix));
+            return new Vector2((pos.X + 1) * 0.5f * _width, (1 - pos.Y) * 0.5f * _height);
         }
 
+        // TODO : fix this
         public Vector3 ScreenToWorld(ref Vector3 screenPos)
         {
             Matrix matrix = Matrix.Invert(_worldMatrix * _viewMatrix * _projectionMatrix);

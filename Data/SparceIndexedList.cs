@@ -17,6 +17,8 @@ namespace Project1.Data
         private List<T> _contents;
         private List<int> _indexes;
         private int _max;
+        public int Count { get; private set; }
+
 
         public SparceIndexedList()
         {
@@ -57,6 +59,7 @@ namespace Project1.Data
                 _contents.Add(obj);
                 _indexes[index] = _contents.Count;
             }
+            Count++;
             return index;
         }
 
@@ -66,6 +69,7 @@ namespace Project1.Data
                 return;
             _contents[_indexes[id]] = null;
             _indexes[id] = -_indexes[id];
+            Count--;
         }
 
         public void Clear()
@@ -73,6 +77,7 @@ namespace Project1.Data
             _contents.Clear();
             _indexes.Clear();
             _max = 0;
+            Count = 0;
         }
 
         public IEnumerator<T> GetEnumerator()

@@ -34,44 +34,52 @@ namespace Project1.Data.Systems
             _spriteBatch = new SpriteBatch(Graphics.GraphicsDevice);
 
             _camera = _world.GetSystem<CameraSystem>();
-            if (_camera != null) 
-                _camera.SetupProjection(AspectRatio, 90);
+            if (_camera != null)
+                _camera.SetupProjection(Graphics.GraphicsDevice.Viewport.Width, Graphics.GraphicsDevice.Viewport.Height, 90);
         }
 
         public void Draw(GameTime delta)
         {
+            long timeNow = DateTime.Now.Ticks;
+
             Graphics.GraphicsDevice.Clear(Color.CornflowerBlue);
             var drawables = _world.GetEntityComponents<RenderableComponent>();
             
             _basicEffect.View = _camera.ViewMatrix;
             _basicEffect.Projection = _camera.ProjectionMatrix;
             _basicEffect.LightingEnabled = true;
+            _basicEffect.TextureEnabled = true;
             _basicEffect.CurrentTechnique.Passes[0].Apply();
 
+            _spriteBatch.Begin();
             int drawing = 0;
             foreach (var x in drawables)
             {
                 if (x.Visible && x.IsVisible(ref _camera.Frustum))
                 {
                     drawing++;
-                    x.Draw(ref _camera.ViewMatrix, ref _camera.ProjectionMatrix);
+                    x.Draw3D(ref _camera.ViewMatrix, ref _camera.ProjectionMatrix);
+                    x.DebugDraw(ref _spriteBatch, ref _camera.ViewMatrix, ref _camera.ProjectionMatrix);
                 }
             }
 
-            _spriteBatch.Begin();
+            long ticksTaken = (DateTime.Now.Ticks - timeNow) / 10000;
+
             _spriteBatch.DrawString(_font, $"Rendering Debug:\n" +
                 $"Time: {Math.Round(delta.TotalGameTime.TotalMilliseconds / 1000, 2)}s\n" +
-                $"FPS: {Math.Round(delta.ElapsedGameTime.TotalSeconds * 1000, 2)}ms\n" +
+                $"FPS: {Math.Round(delta.ElapsedGameTime.TotalSeconds * 1000, 2)}ms {Math.Round((ticksTaken / delta.ElapsedGameTime.TotalMilliseconds) * 100)}%\n" +
                 $"TPS: {Math.Round(tickTime.ElapsedGameTime.TotalSeconds * 1000, 2)}ms\n" +
+                $"Entities: {_world.EntityCount}\n" +
                 $"Drawn: {drawing}/{drawables.Count()}\n" +
-                $"Pos: [{Math.Round(_camera.Translation.X, 2)}, {Math.Round(_camera.Translation.Y, 2)}, {Math.Round(_camera.Translation.Z, 2)}]", new Vector2(0, 0), Color.White);
+                $"Pos: [{Math.Round(_camera.Translation.X, 2)}, {Math.Round(_camera.Translation.Y, 2)}, {Math.Round(_camera.Translation.Z, 2)}]", 
+                new Vector2(0, 0), Color.Yellow);
             _spriteBatch.End();
         }
 
         public void DrawLine(Vector3 start, Vector3 end)
         {
             var vertices = new[] { new VertexPosition(start), new VertexPosition(end) };
-            Graphics.GraphicsDevice.DrawUserPrimitives(PrimitiveType.PointList, vertices, 0, 1);
+            _world.Game.GraphicsDevice.DrawUserPrimitives(PrimitiveType.LineList, vertices, 0, 1);
         }
 
         public override void Update(GameTime delta)
