@@ -10,7 +10,6 @@ namespace Project1.Data.Systems
 {
     internal class PlayerMovement : SystemComponent
     {
-        private int _prevScrollWheel = 0;
         private float yaw = 0, pitch = 0;
         public bool Controlling = true;
         private int JustFocused = 0;
@@ -62,28 +61,27 @@ namespace Project1.Data.Systems
             m.Translation = cam.Translation;
 
             delta *= 2.0f;
-            if (Keyboard.GetState().IsKeyDown(Keys.LeftShift))
+            if (Input.IsKeyDown(Keys.LeftShift))
                 delta *= 10.0f;
 
-            if (Keyboard.GetState().IsKeyDown(Keys.W))
+            if (Input.IsKeyDown(Keys.W))
                 m.Translation += cam.Forward * delta;
-            if (Keyboard.GetState().IsKeyDown(Keys.S))
+            if (Input.IsKeyDown(Keys.S))
                 m.Translation += cam.Backward * delta;
 
-            if (Keyboard.GetState().IsKeyDown(Keys.A))
+            if (Input.IsKeyDown(Keys.A))
                 m.Translation += cam.Left * delta;
-            if (Keyboard.GetState().IsKeyDown(Keys.D))
+            if (Input.IsKeyDown(Keys.D))
                 m.Translation += cam.Right * delta;
 
-            if (Keyboard.GetState().IsKeyDown(Keys.Space))
+            if (Input.IsKeyDown(Keys.Space))
                 m.Translation += cam.Up * delta;
-            if (Keyboard.GetState().IsKeyDown(Keys.C))
+            if (Input.IsKeyDown(Keys.C))
                 m.Translation += cam.Down * delta;
 
-            if (Mouse.GetState().ScrollWheelValue != _prevScrollWheel)
+            if (Input.MouseWheelDelta() != 0)
             {
-                cam.SetFOV(cam.FOV + ((_prevScrollWheel - Mouse.GetState().ScrollWheelValue) / 50f));
-                _prevScrollWheel = Mouse.GetState().ScrollWheelValue;
+                cam.SetFOV(cam.FOV - (Input.MouseWheelDelta() / 50f));
             }
             cam.SetWorldMatrix(m);
         }

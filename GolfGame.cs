@@ -59,6 +59,7 @@ namespace Project1
             }
 
             _world.Update(gameTime);
+            Input.UpdateState();
             base.Update(gameTime);
         }
 

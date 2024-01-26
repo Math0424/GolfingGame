@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using Project1.Data.Components;
 using System;
 using System.Collections.Generic;
@@ -21,6 +22,7 @@ namespace Project1.Data.Systems
         private SpriteBatch _spriteBatch;
 
         private GameTime tickTime;
+        private bool _debugMode;
 
         public RenderingSystem(Game game)
         {
@@ -67,23 +69,26 @@ namespace Project1.Data.Systems
                 }
             }
 
-            _spriteBatch.Begin();
-            _basicEffect.CurrentTechnique.Passes[0].Apply();
-            foreach (var x in drawables)
-                if (x.Rendering)
-                    x.DebugDraw(ref _spriteBatch, ref _camera.ViewMatrix, ref _camera.ProjectionMatrix);
+            if (_debugMode)
+            {
+                _spriteBatch.Begin();
+                _basicEffect.CurrentTechnique.Passes[0].Apply();
+                foreach (var x in drawables)
+                    if (x.Rendering)
+                        x.DebugDraw(ref _spriteBatch, ref _camera.ViewMatrix, ref _camera.ProjectionMatrix);
 
-            long ticksTaken = (DateTime.Now.Ticks - timeNow) / 10000;
+                long ticksTaken = (DateTime.Now.Ticks - timeNow) / 10000;
 
-            _spriteBatch.DrawString(_font, $"Rendering Debug:\n" +
-                $"Time: {Math.Round(delta.TotalGameTime.TotalMilliseconds / 1000, 2)}s\n" +
-                $"FPS: {Math.Round(delta.ElapsedGameTime.TotalSeconds * 1000, 2)}ms {Math.Round((ticksTaken / delta.ElapsedGameTime.TotalMilliseconds) * 100)}%\n" +
-                $"TPS: {Math.Round(tickTime.ElapsedGameTime.TotalSeconds * 1000, 2)}ms\n" +
-                $"Entities: {_world.EntityCount}\n" +
-                $"Drawn: {drawing}/{drawables.Count()}\n" +
-                $"Pos: [{Math.Round(_camera.Translation.X, 2)}, {Math.Round(_camera.Translation.Y, 2)}, {Math.Round(_camera.Translation.Z, 2)}]", 
-                new Vector2(0, 0), Color.Yellow);
-            _spriteBatch.End();
+                _spriteBatch.DrawString(_font, $"Rendering Debug:\n" +
+                    $"Time: {Math.Round(delta.TotalGameTime.TotalMilliseconds / 1000, 2)}s\n" +
+                    $"FPS: {Math.Round(delta.ElapsedGameTime.TotalSeconds * 1000, 2)}ms {Math.Round((ticksTaken / delta.ElapsedGameTime.TotalMilliseconds) * 100)}%\n" +
+                    $"TPS: {Math.Round(tickTime.ElapsedGameTime.TotalSeconds * 1000, 2)}ms\n" +
+                    $"Entities: {_world.EntityCount}\n" +
+                    $"Drawn: {drawing}/{drawables.Count()}\n" +
+                    $"Pos: [{Math.Round(_camera.Translation.X, 2)}, {Math.Round(_camera.Translation.Y, 2)}, {Math.Round(_camera.Translation.Z, 2)}]",
+                    new Vector2(0, 0), Color.Yellow);
+                _spriteBatch.End();
+            }
         }
 
         public void DrawLine(Vector3 start, Vector3 end)
@@ -95,6 +100,10 @@ namespace Project1.Data.Systems
         public override void Update(GameTime delta)
         {
             tickTime = delta;
+            if (Input.IsNewKeyDown(Keys.F11))
+            {
+                _debugMode = !_debugMode;
+            }
         }
     }
 }
