@@ -35,7 +35,7 @@ namespace Project1.Data.Systems
             if (!Controlling || !_world.Game.IsActive)
                 return;
 
-            var cam = _world.GetSystem<CameraSystem>();
+            var cam = _world.GetSystem<Camera>();
             float delta = (float)deltaTime.ElapsedGameTime.TotalSeconds;
             
             var bounds = _world.Game.GraphicsDevice.Viewport.Bounds;

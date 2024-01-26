@@ -64,6 +64,7 @@ namespace Project1.Data
                 x.Value.Close();
                 World.UnRegisterEntityComponent(x.Value);
             }
+            Id = -1;
             _components.Clear();
         }
     }

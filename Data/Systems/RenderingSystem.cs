@@ -16,7 +16,7 @@ namespace Project1.Data.Systems
         public Rectangle ScreenSize => Graphics.GraphicsDevice.Viewport.Bounds;
 
         private BasicEffect _basicEffect;
-        private CameraSystem _camera;
+        private Camera _camera;
         private SpriteFont _font;
         private SpriteBatch _spriteBatch;
 
@@ -33,7 +33,7 @@ namespace Project1.Data.Systems
             _font = _world.Game.Content.Load<SpriteFont>("Fonts/Debug");
             _spriteBatch = new SpriteBatch(Graphics.GraphicsDevice);
 
-            _camera = _world.GetSystem<CameraSystem>();
+            _camera = _world.GetSystem<Camera>();
             if (_camera != null)
                 _camera.SetupProjection(Graphics.GraphicsDevice.Viewport.Width, Graphics.GraphicsDevice.Viewport.Height, 90);
         }
@@ -43,25 +43,35 @@ namespace Project1.Data.Systems
             long timeNow = DateTime.Now.Ticks;
 
             Graphics.GraphicsDevice.Clear(Color.CornflowerBlue);
+            Graphics.GraphicsDevice.RasterizerState = RasterizerState.CullClockwise;
+
             var drawables = _world.GetEntityComponents<RenderableComponent>();
-            
+
             _basicEffect.View = _camera.ViewMatrix;
             _basicEffect.Projection = _camera.ProjectionMatrix;
             _basicEffect.LightingEnabled = true;
             _basicEffect.TextureEnabled = true;
             _basicEffect.CurrentTechnique.Passes[0].Apply();
 
-            _spriteBatch.Begin();
             int drawing = 0;
+            // TODO : some sort of spatial partitioning
+            // oct-tree or dynamic sectors
             foreach (var x in drawables)
             {
-                if (x.Visible && x.IsVisible(ref _camera.Frustum))
+                x.Rendering = false;
+                if (x.Visible && x.IsVisible(ref _camera))
                 {
+                    x.Rendering = true;
                     drawing++;
                     x.Draw3D(ref _camera.ViewMatrix, ref _camera.ProjectionMatrix);
-                    x.DebugDraw(ref _spriteBatch, ref _camera.ViewMatrix, ref _camera.ProjectionMatrix);
                 }
             }
+
+            _spriteBatch.Begin();
+            _basicEffect.CurrentTechnique.Passes[0].Apply();
+            foreach (var x in drawables)
+                if (x.Rendering)
+                    x.DebugDraw(ref _spriteBatch, ref _camera.ViewMatrix, ref _camera.ProjectionMatrix);
 
             long ticksTaken = (DateTime.Now.Ticks - timeNow) / 10000;
 

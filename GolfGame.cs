@@ -19,7 +19,7 @@ namespace Project1
             IsMouseVisible = true;
 
             _world = new World(this, "Level1")
-                .AddSystem(new CameraSystem(true))
+                .AddSystem(new Camera(true))
                 .AddSystem(new PlayerMovement())
                 .AddSystem(new RenderingSystem(this));
         }
@@ -34,14 +34,13 @@ namespace Project1
 
         protected override void LoadContent()
         {
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < 10; i++)
             {
-                for (int j = 0; j < 100; j++)
+                for (int j = 0; j < 10; j++)
                 {
                     ships.Add(_world.CreateEntity()
-                       .AddComponent(new PositionComponent((Vector3.Right * (i * 12)) + (Vector3.Forward * (j * 5))))
-                       .AddComponent(new MeshComponent("models/Destroyer"))
-                       .AddComponent(new DebugDrawComponent()));
+                       .AddComponent(new PositionComponent((Vector3.Right * (i * 24)) + (Vector3.Forward * (j * 12))))
+                       .AddComponent(new MeshComponent("models/Destroyer")));
                 }
             }
         }

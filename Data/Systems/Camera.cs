@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Project1.Data.Systems
 {
-    internal class CameraSystem : SystemComponent
+    internal class Camera : SystemComponent
     {
         public ref BoundingFrustum Frustum => ref _frustum;
         public ref Matrix ViewMatrix => ref _viewMatrix;
@@ -32,7 +32,7 @@ namespace Project1.Data.Systems
         public Vector3 Down => _worldMatrix.Down;
         public Vector3 Translation => _worldMatrix.Translation;
 
-        public CameraSystem(bool smoothing)
+        public Camera(bool smoothing)
         {
             _height = 480;
             _width = 800;
@@ -40,7 +40,7 @@ namespace Project1.Data.Systems
             SetupProjection(_width, _height, 1);
         }
 
-        public CameraSystem SetupProjection(int width, int height, float FOV)
+        public Camera SetupProjection(int width, int height, float FOV)
         {
             _aspectRatio = (float)width / height;
             this._height = height;
@@ -51,13 +51,13 @@ namespace Project1.Data.Systems
             return this;
         }
 
-        public CameraSystem SetupProjection(float FOV)
+        public Camera SetupProjection(float FOV)
         {
             SetupProjection(_width, _height, FOV);
             return this;
         }
 
-        public CameraSystem SetupOrthographic(float width, float height)
+        public Camera SetupOrthographic(float width, float height)
         {
             _projectionMatrix = Matrix.CreateOrthographic(width, height, 0.1f, 100f);
             return this;

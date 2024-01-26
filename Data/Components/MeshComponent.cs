@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using Project1.Data.Systems;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,12 +17,14 @@ namespace Project1.Data.Components
         public int Verticies;
         public BoundingBox BoundingBox;
         public Vector3 ModelCenter;
+        public float Radius;
     }
 
     internal class MeshComponent : RenderableComponent
     {
         // TODO : possible memory leak if lots unique models are created and then never used again
         private static Dictionary<string, ModelInfo> cache = new Dictionary<string, ModelInfo>();
+        private static SpriteFont _font;
 
         public ref ModelInfo Model => ref _info;
         public Vector3 ModelCenter => _info.ModelCenter;
@@ -42,18 +45,62 @@ namespace Project1.Data.Components
         public override void Initalize()
         {
             SetModel(_modelName);
+            if (_font == null)
+                _font = _entity.World.Game.Content.Load<SpriteFont>("Fonts/Debug");
         }
 
-        public override bool IsVisible(ref BoundingFrustum frustum)
+        public override bool IsVisible(ref Camera cam)
         {
             var pos = _entity.Position;
+
+            // I want to cull everything behind the ViewMatrix, but something is wrong~
+            // float dist = Vector3.Dot(cam.WorldMatrix.Forward, _entity.Position.Position - ModelCenter) + Vector3.Dot(cam.Forward, cam.Translation);
+            // if (dist > -_info.Radius)
+            // {
+            //     Console.WriteLine($"Behind plane {dist} ({_info.Radius})");
+            //     return false;
+            // }
+
             BoundingBox WAABB = new BoundingBox(Vector3.Transform(_info.BoundingBox.Min, pos.TransformMatrix), Vector3.Transform(_info.BoundingBox.Max, pos.TransformMatrix));
-            return WAABB.Intersects(frustum);
+            return cam.Frustum.Intersects(WAABB);
         }
 
         public override void Draw3D(ref Matrix viewMatrix, ref Matrix projectionMatrix)
         {
             _info.Model.Draw(_entity.Position.TransformMatrix, viewMatrix, projectionMatrix);
+        }
+
+        public override void DebugDraw(ref SpriteBatch batch, ref Matrix viewMatrix, ref Matrix projectionMatrix)
+        {
+            var pos = _entity.Position;
+            BoundingBox bb = Model.BoundingBox;
+            BoundingBox obb = new BoundingBox(Vector3.Transform(bb.Min, pos.TransformMatrix), Vector3.Transform(bb.Max, pos.TransformMatrix));
+            Vector3[] corners = obb.GetCorners();
+
+            //draw bounding box
+            var vertices = new[] {
+                new VertexPosition(corners[0]), new VertexPosition(corners[1]),
+                new VertexPosition(corners[1]), new VertexPosition(corners[2]),
+                new VertexPosition(corners[2]), new VertexPosition(corners[3]),
+                new VertexPosition(corners[0]), new VertexPosition(corners[3]),
+                new VertexPosition(corners[4]), new VertexPosition(corners[5]),
+                new VertexPosition(corners[5]), new VertexPosition(corners[6]),
+                new VertexPosition(corners[6]), new VertexPosition(corners[7]),
+                new VertexPosition(corners[4]), new VertexPosition(corners[7]),
+                new VertexPosition(corners[0]), new VertexPosition(corners[4]),
+                new VertexPosition(corners[1]), new VertexPosition(corners[5]),
+                new VertexPosition(corners[2]), new VertexPosition(corners[6]),
+                new VertexPosition(corners[3]), new VertexPosition(corners[7])
+            };
+            _entity.World.Game.GraphicsDevice.DrawUserPrimitives(PrimitiveType.LineList, vertices, 0, 12);
+
+            var cam = _entity.World.GetSystem<Camera>();
+            if (cam != null)
+            {
+                Vector3 posx = pos.Position;
+                Vector2 screen = cam.WorldToScreen(ref posx);
+                batch.DrawString(_font, $"ID: {_entity.Id}\nV:{Model.Verticies}", screen, Color.Black);
+            }
         }
 
         private void SetModel(string name)
@@ -66,6 +113,7 @@ namespace Project1.Data.Components
             }
             Model model = _entity.World.Game.Content.Load<Model>(name);
             CalculateModelInfo(model, out _info);
+
             cache[name] = _info;
         }
 
@@ -96,8 +144,9 @@ namespace Project1.Data.Components
             {
                 Model = model,
                 Verticies = verticies,
-                ModelCenter = center / verticies,
+                ModelCenter = (min + max) / 2,
                 BoundingBox = new BoundingBox(min, max),
+                Radius = Vector3.Distance(min, max) / 2,
             };
             Console.WriteLine($"{min}, {max}");
         }
