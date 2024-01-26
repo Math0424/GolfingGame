@@ -77,6 +77,11 @@ namespace Project1.Data.Systems
             _frustum = new BoundingFrustum(_viewMatrix * _projectionMatrix);
         }
 
+        public bool IsInFrustum(Vector3 point)
+        {
+            return _frustum.Contains(point) == ContainmentType.Contains;
+        }
+
         public bool IsInFrustum(ref BoundingBox box)
         {
             return _frustum.Intersects(box);

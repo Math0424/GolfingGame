@@ -13,8 +13,8 @@ namespace Project1.Data.Components
     {
         public bool Visible = true;
         public bool Rendering = true;
-        public abstract bool IsVisible(ref Camera frustum);
-        public virtual void Draw3D(ref Matrix viewMatrix, ref Matrix projectionMatrix) { }
-        public virtual void DebugDraw(ref SpriteBatch batch, ref Matrix viewMatrix, ref Matrix projectionMatrix) { }
+        public abstract bool IsVisible(ref Camera cam);
+        public virtual void Draw(ref GraphicsDevice batch, ref Camera cam) { }
+        public virtual void DebugDraw(ref SpriteBatch batch, ref GraphicsDevice graphics, ref Camera cam) { }
     }
 }

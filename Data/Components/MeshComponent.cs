@@ -65,12 +65,12 @@ namespace Project1.Data.Components
             return cam.Frustum.Intersects(WAABB);
         }
 
-        public override void Draw3D(ref Matrix viewMatrix, ref Matrix projectionMatrix)
+        public override void Draw(ref GraphicsDevice graphics, ref Camera cam)
         {
-            _info.Model.Draw(_entity.Position.TransformMatrix, viewMatrix, projectionMatrix);
+            _info.Model.Draw(_entity.Position.TransformMatrix, cam.ViewMatrix, cam.ProjectionMatrix);
         }
 
-        public override void DebugDraw(ref SpriteBatch batch, ref Matrix viewMatrix, ref Matrix projectionMatrix)
+        public override void DebugDraw(ref SpriteBatch batch, ref GraphicsDevice graphics, ref Camera cam)
         {
             var pos = _entity.Position;
             BoundingBox bb = Model.BoundingBox;
@@ -92,15 +92,11 @@ namespace Project1.Data.Components
                 new VertexPosition(corners[2]), new VertexPosition(corners[6]),
                 new VertexPosition(corners[3]), new VertexPosition(corners[7])
             };
-            _entity.World.Game.GraphicsDevice.DrawUserPrimitives(PrimitiveType.LineList, vertices, 0, 12);
+            graphics.DrawUserPrimitives(PrimitiveType.LineList, vertices, 0, 12);
 
-            var cam = _entity.World.GetSystem<Camera>();
-            if (cam != null)
-            {
-                Vector3 posx = pos.Position;
-                Vector2 screen = cam.WorldToScreen(ref posx);
-                batch.DrawString(_font, $"ID: {_entity.Id}\nV:{Model.Verticies}", screen, Color.Black);
-            }
+            Vector3 posx = pos.Position;
+            Vector2 screen = cam.WorldToScreen(ref posx);
+            batch.DrawString(_font, $"ID: {_entity.Id}\nV:{Model.Verticies}", screen, Color.Black);
         }
 
         private void SetModel(string name)
@@ -148,7 +144,6 @@ namespace Project1.Data.Components
                 BoundingBox = new BoundingBox(min, max),
                 Radius = Vector3.Distance(min, max) / 2,
             };
-            Console.WriteLine($"{min}, {max}");
         }
 
     }

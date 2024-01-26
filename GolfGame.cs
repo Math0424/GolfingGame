@@ -37,13 +37,17 @@ namespace Project1
 
         protected override void LoadContent()
         {
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 100; i++)
             {
-                for (int j = 0; j < 10; j++)
+                for (int j = 0; j < 100; j++)
                 {
                     ships.Add(_world.CreateEntity()
                        .AddComponent(new PositionComponent((Vector3.Right * (i * 24)) + (Vector3.Forward * (j * 12))))
                        .AddComponent(new MeshComponent("models/Destroyer")));
+
+                    _world.CreateEntity()
+                        .AddComponent(new PositionComponent((Vector3.Right * (i * 24)) + (Vector3.Forward * (j * 12)) + (Vector3.Up * 20)))
+                        .AddComponent(new SpriteComponent("textures/test"));
                 }
             }
         }

@@ -13,13 +13,15 @@ namespace Project1.Data.Systems
     internal class RenderingSystem : SystemComponent
     {
         public GraphicsDeviceManager Graphics { get; private set; }
-        public float AspectRatio => Graphics.GraphicsDevice.Viewport.AspectRatio;
-        public Rectangle ScreenSize => Graphics.GraphicsDevice.Viewport.Bounds;
+        public float AspectRatio => _graphicsDevice.Viewport.AspectRatio;
+        public Rectangle ScreenSize => _graphicsDevice.Viewport.Bounds;
 
+        private GraphicsDevice _graphicsDevice;
         private BasicEffect _basicEffect;
         private Camera _camera;
         private SpriteFont _font;
-        private SpriteBatch _spriteBatch;
+        private SpriteBatch _debugSpriteBatch;
+        private SpriteBatch _renderingSpriteBatch;
 
         private GameTime tickTime;
         private bool _debugMode;
@@ -35,18 +37,22 @@ namespace Project1.Data.Systems
 
         private void GraphicInit(object sender, EventArgs e)
         {
-            _basicEffect = new BasicEffect(Graphics.GraphicsDevice);
-            _spriteBatch = new SpriteBatch(Graphics.GraphicsDevice);
+            Console.WriteLine("Graphics Init");
+
+            _graphicsDevice = Graphics.GraphicsDevice;
+            _basicEffect = new BasicEffect(_graphicsDevice);
+            _debugSpriteBatch = new SpriteBatch(_graphicsDevice);
+            _renderingSpriteBatch = new SpriteBatch(_graphicsDevice);
             _font = _world.Game.Content.Load<SpriteFont>("Fonts/Debug");
-            _camera.SetupProjection(Graphics.GraphicsDevice.Viewport.Width, Graphics.GraphicsDevice.Viewport.Height, 90);
+            _camera.SetupProjection(_graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height, 90);
         }
 
         public void Draw(GameTime delta)
         {
             long timeNow = DateTime.Now.Ticks;
 
-            Graphics.GraphicsDevice.Clear(Color.CornflowerBlue);
-            Graphics.GraphicsDevice.RasterizerState = RasterizerState.CullClockwise;
+            _graphicsDevice.Clear(Color.CornflowerBlue);
+            _graphicsDevice.RasterizerState = RasterizerState.CullClockwise;
 
             var drawables = _world.GetEntityComponents<RenderableComponent>();
 
@@ -57,6 +63,7 @@ namespace Project1.Data.Systems
             _basicEffect.CurrentTechnique.Passes[0].Apply();
 
             int drawing = 0;
+            _renderingSpriteBatch.Begin();
             // TODO : some sort of spatial partitioning
             // oct-tree or dynamic sectors
             foreach (var x in drawables)
@@ -66,21 +73,23 @@ namespace Project1.Data.Systems
                 {
                     x.Rendering = true;
                     drawing++;
-                    x.Draw3D(ref _camera.ViewMatrix, ref _camera.ProjectionMatrix);
+                    _basicEffect.CurrentTechnique.Passes[0].Apply();
+                    x.Draw(ref _graphicsDevice, ref _camera);
                 }
             }
+            _renderingSpriteBatch.End();
 
             if (_debugMode)
             {
-                _spriteBatch.Begin();
+                _debugSpriteBatch.Begin();
                 _basicEffect.CurrentTechnique.Passes[0].Apply();
                 foreach (var x in drawables)
                     if (x.Rendering)
-                        x.DebugDraw(ref _spriteBatch, ref _camera.ViewMatrix, ref _camera.ProjectionMatrix);
+                        x.DebugDraw(ref _debugSpriteBatch, ref _graphicsDevice, ref _camera);
 
                 long ticksTaken = (DateTime.Now.Ticks - timeNow) / 10000;
 
-                _spriteBatch.DrawString(_font, $"Rendering Debug:\n" +
+                _debugSpriteBatch.DrawString(_font, $"Rendering Debug:\n" +
                     $"Time: {Math.Round(delta.TotalGameTime.TotalMilliseconds / 1000, 2)}s\n" +
                     $"FPS: {Math.Round(delta.ElapsedGameTime.TotalSeconds * 1000, 2)}ms {Math.Round((ticksTaken / delta.ElapsedGameTime.TotalMilliseconds) * 100)}%\n" +
                     $"TPS: {Math.Round(tickTime.ElapsedGameTime.TotalSeconds * 1000, 2)}ms\n" +
@@ -88,7 +97,7 @@ namespace Project1.Data.Systems
                     $"Drawn: {drawing}/{drawables.Count()}\n" +
                     $"Pos: [{Math.Round(_camera.Translation.X, 2)}, {Math.Round(_camera.Translation.Y, 2)}, {Math.Round(_camera.Translation.Z, 2)}]",
                     new Vector2(0, 0), Color.Yellow);
-                _spriteBatch.End();
+                _debugSpriteBatch.End();
             }
         }
 

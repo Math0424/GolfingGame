@@ -17,6 +17,8 @@ namespace Project1.Data
         public int Id { get; set; }
         public World World { get; private set; }
         private Dictionary<Type, EntityComponent> _components;
+        // I dont like this, figure another way - but its so much faster~
+        private PositionComponent _cachedPos;
 
         public Entity(World world)
         {
@@ -30,7 +32,12 @@ namespace Project1.Data
         /// </summary>
         public PositionComponent Position
         {
-            get => (PositionComponent)_components[typeof(PositionComponent)];
+            get
+            {
+                if (_cachedPos == null)
+                    _cachedPos = (PositionComponent)_components[typeof(PositionComponent)];
+                return _cachedPos;
+            }
         }
 
         public Entity AddComponent<T>(T obj) where T : EntityComponent
