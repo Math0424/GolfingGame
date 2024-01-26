@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -16,15 +17,16 @@ namespace Project1.Data
             RightButton,
         }
 
-
         private static Keys[] _keysLastFrame = new Keys[0];
         private static MouseState _mouseLastFrame = default(MouseState);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsKeyDown(Keys k)
         {
             return Keyboard.GetState().IsKeyDown(k);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsKeyUp(Keys k)
         {
             return Keyboard.GetState().IsKeyUp(k);
@@ -96,6 +98,7 @@ namespace Project1.Data
             return false;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int MouseWheel()
         {
             return Mouse.GetState().ScrollWheelValue;

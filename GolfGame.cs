@@ -47,7 +47,7 @@ namespace Project1
 
         protected override void Update(GameTime gameTime)
         {
-            if (Keyboard.GetState().IsKeyDown(Keys.Escape))
+            if (Input.IsKeyDown(Keys.Escape))
                 Exit();
 
             foreach(var x in ships)

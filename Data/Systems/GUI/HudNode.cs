@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,15 +7,23 @@ using System.Threading.Tasks;
 
 namespace Project1.Data.Systems.GUI
 {
-    internal abstract class HudNode
+    internal abstract partial class HudNode
     {
-        public HudElement Parent { get; private set; }
-        public bool Visible { get; set; }
+        public virtual bool Visible { get; set; }
+        public virtual HudNode Parent
+        {
+            get => _parent;
+            set => _parent = value;
+        }
+
+        public Vector2 Position { get; set; }
         public bool InputEnabled { get; set; }
         public IReadOnlyList<HudNode> Children => _children;
+        public float zOffset { get; set; }
 
         private List<HudNode> _children;
         private bool _registered;
+        protected HudNode _parent;
 
         public HudNode()
         {
