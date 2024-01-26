@@ -25,6 +25,7 @@ namespace Project1.Data
         private Dictionary<Type, List<EntityComponent>> _components;
         private Dictionary<Type, SystemComponent> _systems;
         private bool _focused;
+        private InjectionContainer _injectionContainer;
 
         public World(Game game, string name) 
         {
@@ -35,6 +36,10 @@ namespace Project1.Data
             _entities = new SparceIndexedList<Entity>();
             _components = new Dictionary<Type, List<EntityComponent>>();
             _systems = new Dictionary<Type, SystemComponent>();
+
+            _injectionContainer = new InjectionContainer();
+            _injectionContainer.RegisterClass(game);
+            _injectionContainer.RegisterClass(this);
         }
 
         /// <summary>
@@ -42,9 +47,16 @@ namespace Project1.Data
         /// </summary>
         public RenderingSystem Render => (RenderingSystem)_systems[typeof(RenderingSystem)];
 
+        public World AddSystem<T>() where T : SystemComponent
+        {
+            T obj = _injectionContainer.Resolve<T>();
+            _systems[obj.GetType()] = obj;
+            return this;
+        }
+
         public World AddSystem(SystemComponent system)
         {
-            worldField.SetValue(system, this);
+            _injectionContainer.RegisterClass(system);
             _systems[system.GetType()] = system;
             return this;
         }
@@ -99,12 +111,6 @@ namespace Project1.Data
             Entity entity = new Entity(this);
             entity.Id = _entities.Add(entity);
             return entity;
-        }
-
-        public void Initalize()
-        {
-            foreach (var x in _systems.Values)
-                x.Initalize();
         }
 
         public void Update(GameTime deltaTime)

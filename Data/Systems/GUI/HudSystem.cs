@@ -14,9 +14,11 @@ namespace Project1.Data.Systems.GUI
         private SpriteFont _font;
 
         private HudNode _root;
+        private World _world;
 
-        public override void Initalize()
+        public HudSystem(World world)
         {
+            _world = world;
             _root = new HudElement(null)
             {
                 Bounds = _world.Game.GraphicsDevice.Viewport.Bounds,

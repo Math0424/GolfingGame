@@ -18,15 +18,18 @@ namespace Project1
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
 
+
+            // use injected types?
+            // addSystem<PlayerMovement>()
+            // try on entity methods too, can get rid of init then
             _world = new World(this, "Level1")
-                .AddSystem(new Camera(true))
-                .AddSystem(new PlayerMovement())
-                .AddSystem(new RenderingSystem(this));
+                .AddSystem<Camera>()
+                .AddSystem<PlayerMovement>()
+                .AddSystem<RenderingSystem>();
         }
 
         protected override void Initialize()
         {
-            _world.Initalize();
             base.Initialize();
         }
 

@@ -23,21 +23,22 @@ namespace Project1.Data.Systems
 
         private GameTime tickTime;
         private bool _debugMode;
+        private World _world;
 
-        public RenderingSystem(Game game)
+        public RenderingSystem(World world, Game game, Camera camera)
         {
+            _camera = camera;
+            _world = world;
             Graphics = new GraphicsDeviceManager(game);
+            Graphics.DeviceCreated += GraphicInit;
         }
 
-        public override void Initalize()
+        private void GraphicInit(object sender, EventArgs e)
         {
             _basicEffect = new BasicEffect(Graphics.GraphicsDevice);
-            _font = _world.Game.Content.Load<SpriteFont>("Fonts/Debug");
             _spriteBatch = new SpriteBatch(Graphics.GraphicsDevice);
-
-            _camera = _world.GetSystem<Camera>();
-            if (_camera != null)
-                _camera.SetupProjection(Graphics.GraphicsDevice.Viewport.Width, Graphics.GraphicsDevice.Viewport.Height, 90);
+            _font = _world.Game.Content.Load<SpriteFont>("Fonts/Debug");
+            _camera.SetupProjection(Graphics.GraphicsDevice.Viewport.Width, Graphics.GraphicsDevice.Viewport.Height, 90);
         }
 
         public void Draw(GameTime delta)
@@ -89,12 +90,6 @@ namespace Project1.Data.Systems
                     new Vector2(0, 0), Color.Yellow);
                 _spriteBatch.End();
             }
-        }
-
-        public void DrawLine(Vector3 start, Vector3 end)
-        {
-            var vertices = new[] { new VertexPosition(start), new VertexPosition(end) };
-            _world.Game.GraphicsDevice.DrawUserPrimitives(PrimitiveType.LineList, vertices, 0, 1);
         }
 
         public override void Update(GameTime delta)

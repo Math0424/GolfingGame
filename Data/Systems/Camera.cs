@@ -32,7 +32,7 @@ namespace Project1.Data.Systems
         public Vector3 Down => _worldMatrix.Down;
         public Vector3 Translation => _worldMatrix.Translation;
 
-        public Camera(bool smoothing)
+        public Camera()
         {
             _height = 480;
             _width = 800;

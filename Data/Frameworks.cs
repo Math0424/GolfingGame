@@ -16,8 +16,7 @@ namespace Project1.Data
 
     internal abstract class SystemComponent
     {
-        protected readonly World _world;
-        public virtual void Initalize() {}
+        public SystemComponent() { }
         public abstract void Update(GameTime delta);
         public virtual void Close() {}
     }

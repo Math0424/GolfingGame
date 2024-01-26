@@ -13,9 +13,13 @@ namespace Project1.Data.Systems
         private float yaw = 0, pitch = 0;
         public bool Controlling = true;
         private int JustFocused = 0;
+        private World _world;
+        private Camera _camera;
 
-        public override void Initalize()
+        public PlayerMovement(World world, Camera camera)
         {
+            _camera = camera;
+            _world = world;
             _world.GameFocused += CenterCursor;
         }
 
@@ -34,7 +38,6 @@ namespace Project1.Data.Systems
             if (!Controlling || !_world.Game.IsActive)
                 return;
 
-            var cam = _world.GetSystem<Camera>();
             float delta = (float)deltaTime.ElapsedGameTime.TotalSeconds;
             
             var bounds = _world.Game.GraphicsDevice.Viewport.Bounds;
@@ -58,32 +61,32 @@ namespace Project1.Data.Systems
                 pitch = -89.0f;
 
             Matrix m = Matrix.CreateFromYawPitchRoll(MathHelper.ToRadians(yaw), MathHelper.ToRadians(pitch), 0);
-            m.Translation = cam.Translation;
+            m.Translation = _camera.Translation;
 
             delta *= 2.0f;
             if (Input.IsKeyDown(Keys.LeftShift))
                 delta *= 10.0f;
 
             if (Input.IsKeyDown(Keys.W))
-                m.Translation += cam.Forward * delta;
+                m.Translation += _camera.Forward * delta;
             if (Input.IsKeyDown(Keys.S))
-                m.Translation += cam.Backward * delta;
+                m.Translation += _camera.Backward * delta;
 
             if (Input.IsKeyDown(Keys.A))
-                m.Translation += cam.Left * delta;
+                m.Translation += _camera.Left * delta;
             if (Input.IsKeyDown(Keys.D))
-                m.Translation += cam.Right * delta;
+                m.Translation += _camera.Right * delta;
 
             if (Input.IsKeyDown(Keys.Space))
-                m.Translation += cam.Up * delta;
+                m.Translation += _camera.Up * delta;
             if (Input.IsKeyDown(Keys.C))
-                m.Translation += cam.Down * delta;
+                m.Translation += _camera.Down * delta;
 
             if (Input.MouseWheelDelta() != 0)
             {
-                cam.SetFOV(cam.FOV - (Input.MouseWheelDelta() / 50f));
+                _camera.SetFOV(_camera.FOV - (Input.MouseWheelDelta() / 50f));
             }
-            cam.SetWorldMatrix(m);
+            _camera.SetWorldMatrix(m);
         }
     }
 }
