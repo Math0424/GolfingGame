@@ -45,11 +45,6 @@ namespace Project1.Data.Components
                 _font = _entity.World.Game.Content.Load<SpriteFont>("Fonts/Debug");
         }
 
-        public float ZDepth(ref Camera cam)
-        {
-            return Vector3.DistanceSquared(_entity.Position.Position, cam.Translation);
-        }
-
         // TOOD : group billboards with the same texture together
         public override void Draw(ref BasicEffect effect, ref GraphicsDevice graphics, ref Camera cam)
         {

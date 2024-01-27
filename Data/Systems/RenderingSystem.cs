@@ -19,6 +19,7 @@ namespace Project1.Data.Systems
         private SpriteFont _font;
         private SpriteBatch _debugSpriteBatch;
         private SpriteBatch _spriteBatch;
+        private SpriteEffect _spriteEffect;
 
         private GameTime tickTime;
         private bool _debugMode;
@@ -45,7 +46,10 @@ namespace Project1.Data.Systems
 
             _basicEffect.EnableDefaultLighting();
             _basicEffect.AmbientLightColor *= 2;
-            _graphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
+
+            _spriteEffect = new SpriteEffect(_graphicsDevice);
+
+            //_graphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
 
             _font = _world.Game.Content.Load<SpriteFont>("Fonts/Debug");
             _camera.SetupProjection(_graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height, 90);
@@ -76,23 +80,20 @@ namespace Project1.Data.Systems
                 }
             }
 
-            // sprite effect + sprite batch
-            //_spriteEffect.CurrentTechnique.Passes[0].Apply();
-
-            //_spriteBatch.Begin();
-            //sprites = sprites.OrderBy(e => -e.ZDepth(ref _camera)).ToList();
-            //foreach (var x in sprites)
-            //    x.Draw(ref _basicEffect, ref _graphicsDevice, ref _camera);
-            //_spriteBatch.End();
-
-            //foreach (var p in _basicEffect.CurrentTechnique.Passes)
-            //{
-            //    //p.Apply();
-            //    foreach (var x in drawables)
-            //        if (x.Rendering)
-            //            x.Draw(ref _graphicsDevice, ref _camera);
-            //}
-
+            var sprites = _world.GetEntityComponents<SpriteComponent>();
+            if (sprites != null)
+            {
+                _spriteEffect.CurrentTechnique.Passes[0].Apply();
+                _spriteBatch.Begin();
+                
+                sprites = sprites.OrderBy(e => -e.ZDepth(ref _camera)).ToArray();
+                foreach (var x in sprites)
+                    if (x.IsVisible(ref _camera))
+                        x.Draw(ref _spriteBatch, ref _graphicsDevice, ref _camera);
+                
+                _spriteBatch.End();
+            }
+            
             if (_debugMode)
             {
                 _debugSpriteBatch.Begin();
@@ -121,6 +122,12 @@ namespace Project1.Data.Systems
                 
                 _debugSpriteBatch.End();
             }
+
+            // I fixed it, hah, im going crazy----
+            // this took too fucking long to figure out
+            _graphicsDevice.DepthStencilState = DepthStencilState.Default;
+            _graphicsDevice.BlendState = BlendState.Opaque;
+            _graphicsDevice.SamplerStates[0] = SamplerState.LinearWrap;
         }
 
         public override void Update(GameTime delta)

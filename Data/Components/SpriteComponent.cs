@@ -32,21 +32,14 @@ namespace Project1.Data.Components
             return Vector3.DistanceSquared(_entity.Position.Position, cam.Translation);
         }
 
-        public void Draw(ref BasicEffect effect, ref GraphicsDevice graphics, ref Camera cam)
+        public void Draw(ref SpriteBatch batch, ref GraphicsDevice graphics, ref Camera cam)
         {
-            var pos = _entity.Position;
-            //var newPos = cam.WorldToScreen(ref pos);
+            var pos = _entity.Position.Position;
+            var newPos = cam.WorldToScreen(ref pos);
 
-            //Console.WriteLine(newPos.Z);
-            //Rectangle r = new Rectangle((int)newPos.X, (int)newPos.Y, (int)(30), (int)(30));
+            Rectangle r = new Rectangle((int)newPos.X, (int)newPos.Y, (int)(30), (int)(30));
 
-            // effect.TextureEnabled = true;
-            // effect.Texture = _texture;
-            // effect.World = pos.WorldMatrix;
-            // effect.CurrentTechnique.Passes[0].Apply();
-            // graphics.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, _vertexPositionTexture, 0, 4, _vertexIndices, 0, 4);
-
-            //batch.Draw(_texture, r, Color.White);
+            batch.Draw(_texture, r, Color.White);
         }
 
         public void DebugDraw(ref SpriteBatch batch, ref GraphicsDevice graphics, ref Camera cam)
@@ -54,7 +47,7 @@ namespace Project1.Data.Components
             var pos = _entity.Position;
             Vector3 posx = pos.Position;
             Vector3 screen = cam.WorldToScreen(ref posx);
-            batch.DrawString(_font, $"ID: {_entity.Id}", new Vector2(screen.X, screen.Y), Color.Black, 0, Vector2.Zero, 1 - screen.Z, default, 0);
+            batch.DrawString(_font, $"Sprite\nID: {_entity.Id}", new Vector2(screen.X, screen.Y), Color.Black, 0, Vector2.Zero, 1 - screen.Z, default, 0);
         }
 
         public bool IsVisible(ref Camera cam)

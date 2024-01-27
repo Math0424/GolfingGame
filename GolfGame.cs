@@ -46,6 +46,10 @@ namespace Project1
                     _world.CreateEntity()
                         .AddComponent(new PositionComponent((Vector3.Right * (i * 24)) + (Vector3.Forward * (j * 12)) + (Vector3.Up * 20)))
                         .AddComponent(new BillboardComponent(i % 2 == 0 ? "textures/test" : "textures/shrimp"));
+
+                    // _world.CreateEntity()
+                    //     .AddComponent(new PositionComponent((Vector3.Right * (i * 24)) + (Vector3.Forward * (j * 12)) + (Vector3.Up * 10)))
+                    //     .AddComponent(new SpriteComponent(i % 2 != 0 ? "textures/test" : "textures/shrimp"));
                 }
             }
         }
