@@ -65,7 +65,7 @@ namespace Project1.Data.Components
             return cam.Frustum.Intersects(WAABB);
         }
 
-        public override void Draw(ref GraphicsDevice graphics, ref Camera cam)
+        public override void Draw(ref BasicEffect effect, ref GraphicsDevice graphics, ref Camera cam)
         {
             _info.Model.Draw(_entity.Position.TransformMatrix, cam.ViewMatrix, cam.ProjectionMatrix);
         }
@@ -95,8 +95,8 @@ namespace Project1.Data.Components
             graphics.DrawUserPrimitives(PrimitiveType.LineList, vertices, 0, 12);
 
             Vector3 posx = pos.Position;
-            Vector2 screen = cam.WorldToScreen(ref posx);
-            batch.DrawString(_font, $"ID: {_entity.Id}\nV:{Model.Verticies}", screen, Color.Black);
+            Vector3 screen = cam.WorldToScreen(ref posx);
+            batch.DrawString(_font, $"Mesh\nID: {_entity.Id}\nV:{Model.Verticies}", new Vector2(screen.X, screen.Y), Color.Black, 0, Vector2.Zero, 1 - screen.Z, default, 0);
         }
 
         private void SetModel(string name)

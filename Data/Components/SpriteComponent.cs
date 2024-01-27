@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Project1.Data.Components
 {
-    internal class SpriteComponent : RenderableComponent
+    internal class SpriteComponent : EntityComponent
     {
         private static SpriteFont _font;
         private string _assetName;
@@ -27,23 +27,37 @@ namespace Project1.Data.Components
                 _font = _entity.World.Game.Content.Load<SpriteFont>("Fonts/Debug");
         }
 
-        public override void Draw(ref GraphicsDevice graphics, ref Camera cam)
+        public float ZDepth(ref Camera cam)
+        {
+            return Vector3.DistanceSquared(_entity.Position.Position, cam.Translation);
+        }
+
+        public void Draw(ref BasicEffect effect, ref GraphicsDevice graphics, ref Camera cam)
+        {
+            var pos = _entity.Position;
+            //var newPos = cam.WorldToScreen(ref pos);
+
+            //Console.WriteLine(newPos.Z);
+            //Rectangle r = new Rectangle((int)newPos.X, (int)newPos.Y, (int)(30), (int)(30));
+
+            // effect.TextureEnabled = true;
+            // effect.Texture = _texture;
+            // effect.World = pos.WorldMatrix;
+            // effect.CurrentTechnique.Passes[0].Apply();
+            // graphics.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, _vertexPositionTexture, 0, 4, _vertexIndices, 0, 4);
+
+            //batch.Draw(_texture, r, Color.White);
+        }
+
+        public void DebugDraw(ref SpriteBatch batch, ref GraphicsDevice graphics, ref Camera cam)
         {
             var pos = _entity.Position;
             Vector3 posx = pos.Position;
-            float depth = Vector3.DistanceSquared(cam.Translation, posx);
-            //batch.Draw(_texture, cam.WorldToScreen(ref posx), Rectangle.Empty, Color.White, 0, Vector2.One, Vector2.One, SpriteEffects.None, depth);
+            Vector3 screen = cam.WorldToScreen(ref posx);
+            batch.DrawString(_font, $"ID: {_entity.Id}", new Vector2(screen.X, screen.Y), Color.Black, 0, Vector2.Zero, 1 - screen.Z, default, 0);
         }
 
-        public override void DebugDraw(ref SpriteBatch batch, ref GraphicsDevice graphics, ref Camera cam)
-        {
-            var pos = _entity.Position; 
-            Vector3 posx = pos.Position;
-            Vector2 screen = cam.WorldToScreen(ref posx);
-            batch.DrawString(_font, $"ID: {_entity.Id}", screen, Color.Black);
-        }
-
-        public override bool IsVisible(ref Camera cam)
+        public bool IsVisible(ref Camera cam)
         {
             return cam.IsInFrustum(_entity.Position.Position);
         }

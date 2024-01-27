@@ -16,16 +16,14 @@ namespace Project1
         public GolfGame()
         {
             Content.RootDirectory = "Content";
-            IsMouseVisible = true;
+            IsMouseVisible = false;
 
-
-            // use injected types?
-            // addSystem<PlayerMovement>()
-            // try on entity methods too, can get rid of init then
             _world = new World(this, "Level1")
                 .AddSystem<Camera>()
                 .AddSystem<PlayerMovement>()
                 .AddSystem<RenderingSystem>();
+
+            //IsFixedTimeStep = false;
         }
 
         protected override void Initialize()
@@ -47,7 +45,7 @@ namespace Project1
 
                     _world.CreateEntity()
                         .AddComponent(new PositionComponent((Vector3.Right * (i * 24)) + (Vector3.Forward * (j * 12)) + (Vector3.Up * 20)))
-                        .AddComponent(new SpriteComponent("textures/test"));
+                        .AddComponent(new BillboardComponent(i % 2 == 0 ? "textures/test" : "textures/shrimp"));
                 }
             }
         }

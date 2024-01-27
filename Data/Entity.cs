@@ -62,6 +62,7 @@ namespace Project1.Data
             {
                 World.UnRegisterEntityComponent(_components[t]);
                 _components.Remove(t);
+                _cachedPos = null;
             }
         }
 
@@ -73,6 +74,7 @@ namespace Project1.Data
             }
             Id = -1;
             _components.Clear();
+            _cachedPos = null;
         }
     }
 }
