@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Project1.Data.Systems;
+using Project1.Data.Tools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +18,7 @@ namespace Project1.Data.Components
         public int Verticies;
         public BoundingBox BoundingBox;
         public Vector3 ModelCenter;
-        public float Radius;
+        public float LooseBoundingSphereRadius;
     }
 
     internal class MeshComponent : RenderableComponent
@@ -28,6 +29,8 @@ namespace Project1.Data.Components
 
         public ref ModelInfo Model => ref _info;
         public Vector3 ModelCenter => _info.ModelCenter;
+        public BoundingBox AABB => _AABB;
+        public OrientatedBoundingBox OBB;
         public string ModelName
         {
             get => _info.Name;
@@ -36,23 +39,55 @@ namespace Project1.Data.Components
 
         private ModelInfo _info;
         private string _modelName;
+        private BoundingBox _AABB;
 
         public MeshComponent(string modelname)
         {
             _modelName = modelname;
         }
 
+        private void UpdateAABB()
+        {
+            var m = _entity.Position.TransformMatrix;
+            BoundingBox bb = Model.BoundingBox;
+            for (int i = 0; i < 3; i++)
+            {
+                for(int j = 0; j < 3; j++)
+                {
+                    float e = m[i, j] * bb.Min.GetIndex(j);
+                    float f = m[i, j] * bb.Max.GetIndex(j);
+                    if (e < f)
+                    {
+                        bb.Min.SetIndex(i, bb.Min.GetIndex(i) + e);
+                        bb.Max.SetIndex(i, bb.Max.GetIndex(i) + f);
+                    } 
+                    else
+                    {
+                        bb.Min.SetIndex(i, bb.Min.GetIndex(i) + f);
+                        bb.Max.SetIndex(i, bb.Max.GetIndex(i) + e);
+                    }
+                }
+            }
+            bb.Min += m.Translation;
+            bb.Max += m.Translation;
+            _AABB = bb;
+        }
+
         public override void Initalize()
         {
+            _entity.Position.UpdatedTransforms += UpdateAABB;
             SetModel(_modelName);
             if (_font == null)
                 _font = _entity.World.Game.Content.Load<SpriteFont>("Fonts/Debug");
         }
 
+        public override void Close()
+        {
+            _entity.Position.UpdatedTransforms -= UpdateAABB;
+        }
+
         public override bool IsVisible(ref Camera cam)
         {
-            var pos = _entity.Position;
-
             // I want to cull everything behind the ViewMatrix, but something is wrong~
             // float dist = Vector3.Dot(cam.WorldMatrix.Forward, _entity.Position.Position - ModelCenter) + Vector3.Dot(cam.Forward, cam.Translation);
             // if (dist > -_info.Radius)
@@ -61,8 +96,7 @@ namespace Project1.Data.Components
             //     return false;
             // }
 
-            BoundingBox WAABB = new BoundingBox(Vector3.Transform(_info.BoundingBox.Min, pos.TransformMatrix), Vector3.Transform(_info.BoundingBox.Max, pos.TransformMatrix));
-            return cam.Frustum.Intersects(WAABB);
+            return cam.Frustum.Intersects(AABB);
         }
 
         public override void Draw(ref BasicEffect effect, ref GraphicsDevice graphics, ref Camera cam)
@@ -73,9 +107,7 @@ namespace Project1.Data.Components
         public override void DebugDraw(ref SpriteBatch batch, ref GraphicsDevice graphics, ref Camera cam)
         {
             var pos = _entity.Position;
-            BoundingBox bb = Model.BoundingBox;
-            BoundingBox obb = new BoundingBox(Vector3.Transform(bb.Min, pos.TransformMatrix), Vector3.Transform(bb.Max, pos.TransformMatrix));
-            Vector3[] corners = obb.GetCorners();
+            Vector3[] corners = AABB.GetCorners();
 
             //draw bounding box
             var vertices = new[] {
@@ -142,7 +174,7 @@ namespace Project1.Data.Components
                 Verticies = verticies,
                 ModelCenter = (min + max) / 2,
                 BoundingBox = new BoundingBox(min, max),
-                Radius = Vector3.Distance(min, max) / 2,
+                LooseBoundingSphereRadius = Vector3.Distance(min, max),
             };
         }
 

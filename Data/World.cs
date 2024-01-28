@@ -47,6 +47,11 @@ namespace Project1.Data
         /// </summary>
         public RenderingSystem Render => (RenderingSystem)_systems[typeof(RenderingSystem)];
 
+        public void AddInjectedType(object obj)
+        {
+            _injectionContainer.RegisterClass(obj);
+        }
+
         public World AddSystem<T>() where T : SystemComponent
         {
             T obj = _injectionContainer.Resolve<T>();
@@ -128,13 +133,11 @@ namespace Project1.Data
 
         public void Draw(GameTime deltaTime)
         {
-            // world render
-            if (_systems.ContainsKey(typeof(RenderingSystem)))
-                ((RenderingSystem)_systems[typeof(RenderingSystem)]).Draw(deltaTime);
-
-            // hud render
-            if (_systems.ContainsKey(typeof(HudSystem)))
-                ((HudSystem)_systems[typeof(HudSystem)]).Draw(deltaTime);
+            foreach (var x in _systems.Values)
+            {
+                if (x.GetType().IsAssignableTo(typeof(IDrawUpdate)))
+                    ((IDrawUpdate)x).Draw(deltaTime);
+            }
         }
 
         public void Close()

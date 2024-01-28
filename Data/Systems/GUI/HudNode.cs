@@ -33,7 +33,7 @@ namespace Project1.Data.Systems.GUI
         public HudNode(HudNode parent)
         {
             _children = new List<HudNode>();
-            parent.AddChild(this);
+            parent?.AddChild(this);
         }
 
         public void AddChild(HudNode element)

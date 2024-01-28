@@ -17,13 +17,13 @@ namespace Project1.Data
 
         }
 
-        public T Resolve<T>() where T : SystemComponent
+        public T Resolve<T>()
         {
             RegisterType<T, T>();
             return (T)resolver[typeof(T)];
         }
 
-        public void RegisterType<T, U>() where U : SystemComponent
+        public void RegisterType<T, U>()
         {
             if (resolver.ContainsKey(typeof(T)))
                 throw new Exception($"Type {typeof(T)} already found in resolver!");

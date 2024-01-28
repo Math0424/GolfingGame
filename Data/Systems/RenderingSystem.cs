@@ -10,8 +10,10 @@ using System.Threading.Tasks;
 
 namespace Project1.Data.Systems
 {
-    internal class RenderingSystem : SystemComponent
+    internal class RenderingSystem : SystemComponent, IDrawUpdate
     {
+        public Action<SpriteBatch, GraphicsDevice, Camera> DebugDraw;
+
         private GraphicsDeviceManager _graphics;
         private GraphicsDevice _graphicsDevice;
         private BasicEffect _basicEffect;
@@ -30,6 +32,7 @@ namespace Project1.Data.Systems
             _camera = camera;
             _world = world;
             _graphics = new GraphicsDeviceManager(game);
+            world.AddInjectedType(_graphics);
             _graphics.DeviceCreated += GraphicInit;
         }
 
@@ -44,12 +47,11 @@ namespace Project1.Data.Systems
             _spriteBatch = new SpriteBatch(_graphicsDevice);
             _debugSpriteBatch = new SpriteBatch(_graphicsDevice);
 
-            _basicEffect.EnableDefaultLighting();
-            _basicEffect.AmbientLightColor *= 2;
+            //_basicEffect.EnableDefaultLighting();
+            _basicEffect.LightingEnabled = true;
+            _basicEffect.AmbientLightColor = Vector3.One;
 
             _spriteEffect = new SpriteEffect(_graphicsDevice);
-
-            //_graphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
 
             _font = _world.Game.Content.Load<SpriteFont>("Fonts/Debug");
             _camera.SetupProjection(_graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height, 90);
@@ -68,6 +70,7 @@ namespace Project1.Data.Systems
             _basicEffect.View = _camera.ViewMatrix;
             _basicEffect.Projection = _camera.ProjectionMatrix;
             _basicEffect.TextureEnabled = true;
+            _basicEffect.VertexColorEnabled = false;
 
             // TODO : some sort of spatial partitioning
             // oct-tree or dynamic sectors
@@ -98,10 +101,14 @@ namespace Project1.Data.Systems
             {
                 _debugSpriteBatch.Begin();
 
+                Vector3 prevAmbientColor = _basicEffect.AmbientLightColor;
                 _basicEffect.World = Matrix.Identity;
                 _basicEffect.TextureEnabled = false;
+                _basicEffect.VertexColorEnabled = true;
+                _basicEffect.AmbientLightColor = Vector3.One;
                 _basicEffect.CurrentTechnique.Passes[0].Apply();
-                
+
+                DebugDraw?.Invoke(_debugSpriteBatch, _graphicsDevice, _camera);
                 foreach (var x in rendering)
                     x.DebugDraw(ref _debugSpriteBatch, ref _graphicsDevice, ref _camera);
                 
@@ -119,7 +126,8 @@ namespace Project1.Data.Systems
                     $"Textures: {_graphicsDevice.Metrics.TextureCount}\n" +
                     $"Pos: [{Math.Round(_camera.Translation.X, 2)}, {Math.Round(_camera.Translation.Y, 2)}, {Math.Round(_camera.Translation.Z, 2)}]",
                     new Vector2(0, 0), Color.Yellow);
-                
+
+                _basicEffect.AmbientLightColor = prevAmbientColor;
                 _debugSpriteBatch.End();
             }
 

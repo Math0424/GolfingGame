@@ -4,6 +4,8 @@ using Microsoft.Xna.Framework.Input;
 using Project1.Data;
 using Project1.Data.Components;
 using Project1.Data.Systems;
+using Project1.Data.Systems.GUI;
+using Project1.Data.Systems.Physics;
 using System;
 using System.Collections.Generic;
 
@@ -21,9 +23,9 @@ namespace Project1
             _world = new World(this, "Level1")
                 .AddSystem<Camera>()
                 .AddSystem<PlayerMovement>()
-                .AddSystem<RenderingSystem>();
-
-            //IsFixedTimeStep = false;
+                .AddSystem<RenderingSystem>()
+                .AddSystem<PhysicsSystem>()
+                .AddSystem<HudSystem>();
         }
 
         protected override void Initialize()
@@ -31,26 +33,23 @@ namespace Project1
             base.Initialize();
         }
 
-        List<Entity> ships = new List<Entity>();
-
         protected override void LoadContent()
         {
-            for (int i = 0; i < 100; i++)
+            //_world.CreateEntity()
+            //    .AddComponent(new PositionComponent(Matrix.CreateRotationX(MathHelper.PiOver2) * Matrix.CreateScale(100)))
+            //    .AddComponent(new BillboardComponent("textures/shrimp", BillboardOption.EntityFacing))
+            //    .AddComponent(new PhysicsComponent(PhysicsBody.Plane, RigidBodyFlags.Static));
+
+            for (int i = -1; i <= 1; i++)
             {
-                for (int j = 0; j < 100; j++)
-                {
-                    ships.Add(_world.CreateEntity()
-                       .AddComponent(new PositionComponent((Vector3.Right * (i * 24)) + (Vector3.Forward * (j * 12))))
-                       .AddComponent(new MeshComponent("models/Destroyer")));
-
-                    _world.CreateEntity()
-                        .AddComponent(new PositionComponent((Vector3.Right * (i * 24)) + (Vector3.Forward * (j * 12)) + (Vector3.Up * 20)))
-                        .AddComponent(new BillboardComponent(i % 2 == 0 ? "textures/test" : "textures/shrimp"));
-
-                    // _world.CreateEntity()
-                    //     .AddComponent(new PositionComponent((Vector3.Right * (i * 24)) + (Vector3.Forward * (j * 12)) + (Vector3.Up * 10)))
-                    //     .AddComponent(new SpriteComponent(i % 2 != 0 ? "textures/test" : "textures/shrimp"));
-                }
+                if (i == 0) continue;
+                PrimitiveComponent comp = new PrimitiveComponent(RigidBody.Sphere, RigidBodyFlags.Dynamic);
+                _world.CreateEntity()
+                    .AddComponent(new PositionComponent(Vector3.Up * 5 * i))
+                    .AddComponent(new MeshComponent("models/Destroyer"))
+                    .AddComponent(comp);
+                comp.LinearMomentum = Vector3.Down * 1f * i;
+                //comp.AngularMomentum = Vector3.One;
             }
         }
 
@@ -58,14 +57,6 @@ namespace Project1
         {
             if (Input.IsKeyDown(Keys.Escape))
                 Exit();
-
-            foreach(var x in ships)
-            {
-                float y = (0.5f - (float)Math.Sin(gameTime.TotalGameTime.TotalSeconds + x.Position.Position.X)) * 300 * (float)gameTime.ElapsedGameTime.TotalSeconds;
-                Vector3 newPos = x.Position.Position;
-                newPos.Y = y;
-                x.Position.SetPosition(newPos);
-            }
 
             _world.Update(gameTime);
             Input.UpdateState();

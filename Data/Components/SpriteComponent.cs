@@ -37,7 +37,7 @@ namespace Project1.Data.Components
             var pos = _entity.Position.Position;
             var newPos = cam.WorldToScreen(ref pos);
 
-            Rectangle r = new Rectangle((int)newPos.X, (int)newPos.Y, (int)(30), (int)(30));
+            Rectangle r = new Rectangle((int)newPos.X, (int)newPos.Y, (int)(30 * (1 - newPos.Z)), (int)(30 * (1 - newPos.Z)));
 
             batch.Draw(_texture, r, Color.White);
         }
@@ -47,7 +47,7 @@ namespace Project1.Data.Components
             var pos = _entity.Position;
             Vector3 posx = pos.Position;
             Vector3 screen = cam.WorldToScreen(ref posx);
-            batch.DrawString(_font, $"Sprite\nID: {_entity.Id}", new Vector2(screen.X, screen.Y), Color.Black, 0, Vector2.Zero, 1 - screen.Z, default, 0);
+            batch.DrawString(_font, $"Sprite\nID: {_entity.Id}", new Vector2(screen.X, screen.Y), Color.Transparent, 0, Vector2.Zero, 1 - screen.Z, default, 0);
         }
 
         public bool IsVisible(ref Camera cam)

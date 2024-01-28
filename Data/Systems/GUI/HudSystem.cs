@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -8,26 +9,34 @@ using System.Threading.Tasks;
 
 namespace Project1.Data.Systems.GUI
 {
-    internal class HudSystem : SystemComponent
+    internal class HudSystem : SystemComponent, IDrawUpdate
     {
         private SpriteBatch _spriteBatch;
         private SpriteFont _font;
 
         private HudNode _root;
-        private World _world;
+        private Game _game;
+        private GraphicsDeviceManager _graphics;
 
-        public HudSystem(World world)
+        public HudSystem(Game game, GraphicsDeviceManager graphics)
         {
-            _world = world;
+            _game = game;
+            _graphics = graphics;
+            _graphics.DeviceCreated += GraphicInit;
+        }
+
+        private void GraphicInit(object sender, EventArgs e)
+        {
+            _graphics = (GraphicsDeviceManager)sender;
+            _spriteBatch = new SpriteBatch(_graphics.GraphicsDevice);
             _root = new HudElement(null)
             {
-                Bounds = _world.Game.GraphicsDevice.Viewport.Bounds,
+                Bounds = _graphics.GraphicsDevice.Viewport.Bounds,
                 Visible = true,
                 InputEnabled = true,
-                Position = new Vector2(_world.Game.GraphicsDevice.Viewport.Width / 2, _world.Game.GraphicsDevice.Viewport.Height / 2)
+                Position = new Vector2(_graphics.GraphicsDevice.Viewport.Width / 2, _graphics.GraphicsDevice.Viewport.Height / 2)
             };
-            _spriteBatch = new SpriteBatch(_world.Game.GraphicsDevice);
-            _font = _world.Game.Content.Load<SpriteFont>("Fonts/Debug");
+            _font = _game.Content.Load<SpriteFont>("Fonts/Debug");
         }
 
         public void RegisterHudElement(HudElement element)

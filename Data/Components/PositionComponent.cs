@@ -28,39 +28,49 @@ namespace Project1.Data.Components
         private Matrix _localMatrix;
         private Matrix _worldMatrix;
 
+        public Action UpdatedTransforms;
+
+        public PositionComponent(Matrix worldMatrix) : this()
+        {
+            SetWorldMatrix(worldMatrix);
+        }
+
         public PositionComponent(Vector3 Pos) : this()
         {
             _worldMatrix.Translation = Pos;
-            UpdateTransform();
         }
 
         public PositionComponent()
         {
+            _dirtyTransform = true;
             _localMatrix = Matrix.Identity;
             _worldMatrix = Matrix.Identity;
-            UpdateTransform();
         }
 
         public void SetWorldMatrix(Matrix matrix)
         {
+            UpdatedTransforms?.Invoke();
             _worldMatrix = matrix;
             _dirtyTransform = true;
         }
 
         public void SetLocalMatrix(Matrix matrix)
         {
+            UpdatedTransforms?.Invoke();
             _localMatrix = matrix;
             _dirtyTransform = true;
         }
 
         public void SetPosition(Vector3 vector)
         {
+            UpdatedTransforms?.Invoke();
             _worldMatrix.Translation = vector;
             _dirtyTransform = true;
         }
 
         public void Scale(float scale)
         {
+            UpdatedTransforms?.Invoke();
             Matrix s = Matrix.CreateScale(scale);
             _localMatrix *= s;
             _dirtyTransform = true;
