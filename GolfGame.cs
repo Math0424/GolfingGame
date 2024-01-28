@@ -40,17 +40,23 @@ namespace Project1
             //    .AddComponent(new BillboardComponent("textures/shrimp", BillboardOption.EntityFacing))
             //    .AddComponent(new PhysicsComponent(PhysicsBody.Plane, RigidBodyFlags.Static));
 
-            for (int i = -1; i <= 1; i++)
+            for (int i = 10; i <= 10; i++)
             {
-                if (i == 0) continue;
-                PrimitiveComponent comp = new PrimitiveComponent(RigidBody.Sphere, RigidBodyFlags.Dynamic);
-                _world.CreateEntity()
-                    .AddComponent(new PositionComponent(Vector3.Up * 5 * i))
-                    .AddComponent(new MeshComponent("models/Destroyer"))
+                PrimitivePhysicsComponent comp = new PrimitivePhysicsComponent(RigidBody.Sphere, RigidBodyFlags.Dynamic);
+                var ent = _world.CreateEntity()
+                    .AddComponent(new PositionComponent((Vector3.Up * 2 * i) + (Vector3.Right * .5f * i)))
+                    .AddComponent(new MeshComponent("models/sphere"))
                     .AddComponent(comp);
-                comp.LinearMomentum = Vector3.Down * 1f * i;
-                //comp.AngularMomentum = Vector3.One;
+                ent.Position.SetLocalMatrix(Matrix.CreateScale(.8f));
+                comp.LinearVelocity = Vector3.Down * 1f * i;
+                comp.AngularVelocity = Vector3.One;
             }
+
+            var plane = _world.CreateEntity()
+                    .AddComponent(new PositionComponent(Matrix.CreateRotationX(MathHelper.PiOver2)))
+                    .AddComponent(new BillboardComponent("textures/shrimp", BillboardOption.EntityFacing))
+                    .AddComponent(new PrimitivePhysicsComponent(RigidBody.Plane, RigidBodyFlags.Static));
+            plane.Position.SetLocalMatrix(Matrix.CreateScale(100f));
         }
 
         protected override void Update(GameTime gameTime)

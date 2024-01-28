@@ -18,7 +18,7 @@ namespace Project1.Data.Components
         public int Verticies;
         public BoundingBox BoundingBox;
         public Vector3 ModelCenter;
-        public float LooseBoundingSphereRadius;
+        public float BoundingSphereRadius;
     }
 
     internal class MeshComponent : RenderableComponent
@@ -174,7 +174,7 @@ namespace Project1.Data.Components
                 Verticies = verticies,
                 ModelCenter = (min + max) / 2,
                 BoundingBox = new BoundingBox(min, max),
-                LooseBoundingSphereRadius = Vector3.Distance(min, max),
+                BoundingSphereRadius = Vector3.Distance(min, max),
             };
         }
 

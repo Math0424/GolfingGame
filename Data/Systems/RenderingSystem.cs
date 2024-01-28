@@ -42,6 +42,7 @@ namespace Project1.Data.Systems
 
             _graphics = (GraphicsDeviceManager)sender;
             _graphicsDevice = _graphics.GraphicsDevice;
+
             _basicEffect = new BasicEffect(_graphicsDevice);
 
             _spriteBatch = new SpriteBatch(_graphicsDevice);

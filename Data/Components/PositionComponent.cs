@@ -23,8 +23,8 @@ namespace Project1.Data.Components
         public ref Matrix WorldMatrix => ref _worldMatrix;
         public Vector3 Position => _worldMatrix.Translation;
 
-        private Matrix _transformMatrix;
         private bool _dirtyTransform;
+        private Matrix _transformMatrix;
         private Matrix _localMatrix;
         private Matrix _worldMatrix;
 
@@ -37,6 +37,7 @@ namespace Project1.Data.Components
 
         public PositionComponent(Vector3 Pos) : this()
         {
+            _worldMatrix = Matrix.Identity;
             _worldMatrix.Translation = Pos;
         }
 
