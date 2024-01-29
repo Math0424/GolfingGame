@@ -1,5 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Project1.Data.Systems;
+using Project1.Data.Systems.RenderMessages;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,19 +13,16 @@ namespace Project1.Data
     internal static class DrawingUtils
     {
 
-        public static void DrawLine(GraphicsDevice graphics, Vector3 start, Vector3 dir, Color color)
+        public static void DrawLine(RenderingSystem graphics, Vector3 start, Vector3 dir, Color color)
         {
-            var vertices = new[] {
-                new VertexPositionColor(start, color), new VertexPositionColor(start + dir, color),
-            };
-            graphics.DrawUserPrimitives(PrimitiveType.LineList, vertices, 0, 1);
+            graphics.EnqueueMessage(new RenderMessageDrawLine(start, start + dir, color));
         }
 
-        public static void DrawMatrix(GraphicsDevice graphics, Matrix matrix)
+        public static void DrawMatrix(RenderingSystem render, Matrix matrix)
         {
-            DrawLine(graphics, matrix.Translation, Vector3.Normalize(matrix.Up), Color.Green);
-            DrawLine(graphics, matrix.Translation, Vector3.Normalize(matrix.Right), Color.Red);
-            DrawLine(graphics, matrix.Translation, Vector3.Normalize(matrix.Forward), Color.Blue);
+            DrawLine(render, matrix.Translation, Vector3.Normalize(matrix.Up), Color.Green);
+            DrawLine(render, matrix.Translation, Vector3.Normalize(matrix.Right), Color.Red);
+            DrawLine(render, matrix.Translation, Vector3.Normalize(matrix.Forward), Color.Blue);
         }
 
 

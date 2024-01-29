@@ -14,8 +14,6 @@ namespace Project1.Data
 {
     internal class World
     {
-        private static FieldInfo worldField = typeof(SystemComponent).GetField("_world", BindingFlags.Instance | BindingFlags.NonPublic);
-
         public string WorldName { get; private set; }
         public Action GameFocused;
         public Game Game { private set; get; }

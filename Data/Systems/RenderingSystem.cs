@@ -14,7 +14,7 @@ namespace Project1.Data.Systems
 {
     internal class RenderingSystem : SystemComponent, IDrawUpdate
     {
-        public Action<SpriteBatch, GraphicsDevice, Camera> DebugDraw;
+        public Action DoDraw;
 
         private GraphicsDeviceManager _graphics;
         private GraphicsDevice _graphicsDevice;
@@ -83,6 +83,8 @@ namespace Project1.Data.Systems
             long timeNow = DateTime.Now.Ticks;
             _graphicsDevice.Clear(Color.CornflowerBlue);
 
+            DoDraw?.Invoke();
+
             var drawables = _world.GetEntityComponents<RenderableComponent>();
 
             int rendering = 0;
@@ -120,9 +122,8 @@ namespace Project1.Data.Systems
                     $"FPS: {Math.Round(delta.ElapsedGameTime.TotalSeconds * 1000, 2)}ms {Math.Round((ticksTaken / delta.ElapsedGameTime.TotalMilliseconds) * 100)}%\n" +
                     $"TPS: {Math.Round(tickTime.ElapsedGameTime.TotalSeconds * 1000, 2)}ms\n" +
                     $"Entities: {_world.EntityCount}\n" +
-                    $"RenderMessages: {renderMessageCount}\n" +
                     $"Drawn: {rendering}/{drawables.Count()}\n" +
-                    $"DrawCount: {_graphicsDevice.Metrics.DrawCount}\n" +
+                    $"DrawCalls: {renderMessageCount} / {_graphicsDevice.Metrics.DrawCount}\n" +
                     $"Triangles: {_graphicsDevice.Metrics.PrimitiveCount}\n" +
                     $"Textures: {_graphicsDevice.Metrics.TextureCount}\n" +
                     $"Pos: [{Math.Round(_camera.Translation.X, 2)}, {Math.Round(_camera.Translation.Y, 2)}, {Math.Round(_camera.Translation.Z, 2)}]",
@@ -181,10 +182,15 @@ namespace Project1.Data.Systems
                         break;
                     case RenderMessageType.DrawMesh:
                         var drawMesh = (RenderMessageDrawMesh)message;
+                        _basicEffect.VertexColorEnabled = false;
+                        _basicEffect.TextureEnabled = true;
                         _meshes[drawMesh.Model].Draw(drawMesh.Matrix, _camera.ViewMatrix, _camera.ProjectionMatrix);
                         break;
                     case RenderMessageType.DrawLine:
                         var drawLine = (RenderMessageDrawLine)message;
+                        _basicEffect.VertexColorEnabled = true;
+                        _basicEffect.TextureEnabled = false;
+                        _basicEffect.CurrentTechnique.Passes[0].Apply();
                         var coloredLineVertices = new[] {
                             new VertexPositionColor(drawLine.Pos1, drawLine.Color), new VertexPositionColor(drawLine.Pos2, drawLine.Color),
                         };
@@ -192,6 +198,7 @@ namespace Project1.Data.Systems
                         break;
                     case RenderMessageType.DrawQuad:
                         var drawQuad = (RenderMessageDrawQuad)message;
+                        _basicEffect.VertexColorEnabled = false;
                         _basicEffect.TextureEnabled = true;
                         _basicEffect.Texture = _textures[drawQuad.Texture];
                         _basicEffect.World = drawQuad.Matrix;

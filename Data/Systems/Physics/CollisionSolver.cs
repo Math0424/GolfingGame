@@ -12,7 +12,8 @@ namespace Project1.Data.Systems.Physics
     {
         public ContainmentType Containment;
         public Vector3 PositionWorld;
-        public Vector3 PositionRelative;
+        public Vector3 TargetRelative;
+        public Vector3 ContactRelative;
         public Vector3 Normal;
         public float Penetration;
 
@@ -24,57 +25,63 @@ namespace Project1.Data.Systems.Physics
 
     internal static class CollisionSolver
     {
-        public static void Solve(PrimitivePhysicsComponent object1, PrimitivePhysicsComponent object2, out Collision collision)
+        public static void Solve(PrimitivePhysicsComponent target, PrimitivePhysicsComponent contact, out Collision collision)
         {
             collision = default;
-            switch (object1.RigidBody.RigidBodyType)
+            switch (target.RigidBody.RigidBodyType)
             {
                 case RigidBodyType.Sphere:
-                    switch(object2.RigidBody.RigidBodyType)
+                    switch(contact.RigidBody.RigidBodyType)
                     {
                         case RigidBodyType.Sphere:
-                            SolveSphereAndSphere((SpherePhysics)object1.RigidBody, (SpherePhysics)object2.RigidBody, out collision);
+                            SolveSphereAndSphere((RigidBodySphere)target.RigidBody, (RigidBodySphere)contact.RigidBody, out collision);
                             break;
                         case RigidBodyType.Plane:
-                            SolvePlaneAndSphere((PlanePhysics)object2.RigidBody, (SpherePhysics)object1.RigidBody, out collision);
+                            SolvePlaneAndSphere((RigidBodySphere)target.RigidBody, (RigidBodyPlane)contact.RigidBody, out collision);
                             break;
                     }
                     break;
             }
         }
 
-        public static void SolvePlaneAndSphere(PlanePhysics plane, SpherePhysics sphere, out Collision collision)
+        public static void SolvePlaneAndSphere(RigidBodySphere target, RigidBodyPlane contact, out Collision collision)
         {
             collision = default;
-            float planeOffset = Vector3.Dot(plane.WorldMatrix.Translation, plane.WorldMatrix.Forward);
-            Vector3 planeDirection = plane.WorldMatrix.Backward;
-            Vector3 spherePos = sphere.WorldMatrix.Translation;
+            float planeOffset = Vector3.Dot(contact.WorldMatrix.Translation, contact.WorldMatrix.Forward);
+            Vector3 planeDirection = contact.WorldMatrix.Backward;
+            Vector3 spherePos = target.WorldMatrix.Translation;
 
-            float sphereDistance = Vector3.Dot(spherePos, planeDirection) - sphere.Radius - planeOffset;
+            float sphereDistance = Vector3.Dot(spherePos, planeDirection) - target.Radius - planeOffset;
 
-            if (sphereDistance > 0 || sphereDistance < -sphere.Radius)
+            if (sphereDistance > 0 || sphereDistance < -target.Radius)
                 return;
 
             collision.Normal = planeDirection;
-            collision.PositionRelative = spherePos - planeDirection * (sphereDistance + sphere.Radius);
-            collision.PositionWorld = plane.WorldMatrix.Translation - collision.PositionRelative;
+
+            collision.ContactRelative = collision.Normal * target.Radius;
+            collision.TargetRelative = Vector3.Zero;
+            collision.PositionWorld = spherePos - planeDirection * (sphereDistance + target.Radius);
+
             collision.Penetration = -sphereDistance;
             collision.Containment = ContainmentType.Intersects;
         }
 
-        public static void SolveSphereAndSphere(SpherePhysics sphere1, SpherePhysics sphere2, out Collision collision)
+        public static void SolveSphereAndSphere(RigidBodySphere target, RigidBodySphere contact, out Collision collision)
         {
             collision = default;
-            Vector3 midLine = sphere1.WorldMatrix.Translation - sphere2.WorldMatrix.Translation;
+            Vector3 midLine = target.WorldMatrix.Translation - contact.WorldMatrix.Translation;
             float midDistance = midLine.Length();
-            if (midDistance <= 0 || midDistance >= sphere2.Radius + sphere2.Radius)
+            if (midDistance <= 0 || midDistance >= contact.Radius + target.Radius)
                 return;
 
             collision.Normal = midLine * (1 / midDistance);
-            collision.PositionRelative = midLine * .5f;
-            collision.PositionWorld = sphere1.WorldMatrix.Translation + collision.PositionRelative;
-            collision.Penetration = (sphere1.Radius + sphere2.Radius - midDistance);
-            collision.Containment = collision.Penetration > sphere2.Radius ? ContainmentType.Contains : ContainmentType.Intersects;
+
+            collision.ContactRelative = collision.Normal * contact.Radius;
+            collision.TargetRelative = -collision.Normal * target.Radius;
+
+            collision.PositionWorld = target.WorldMatrix.Translation + collision.TargetRelative;
+            collision.Penetration = (target.Radius + contact.Radius - midDistance);
+            collision.Containment = collision.Penetration > contact.Radius ? ContainmentType.Contains : ContainmentType.Intersects;
         }
 
     }

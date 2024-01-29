@@ -21,11 +21,7 @@ namespace Project1.Data.Components
 
     internal class PrimitivePhysicsComponent : EntityComponent
     {
-        public RigidBodyFlags RigidBodyFlag
-        {
-            get => _rigidBodyFlags;
-            set => UpdateRigidBodyFlag(value);
-        }
+        public RigidBodyFlags RigidBodyMovementType { get; private set; }
 
         public Vector3 Acceleration { get; private set; }
         private Vector3 _prevPosition;
@@ -46,8 +42,7 @@ namespace Project1.Data.Components
         public float StaticFriction;
         public float DynamicFriction;
 
-
-        private RigidBodyFlags _rigidBodyFlags;
+        private float _userRadius;
 
         public RigidBody RigidBody { get; private set; }
         // bool IsMoving
@@ -59,35 +54,32 @@ namespace Project1.Data.Components
         /// </summary>
         public Action<int, Vector3> Collision;
 
-        public PrimitivePhysicsComponent(RigidBody collider, RigidBodyFlags flags)
+        public PrimitivePhysicsComponent(RigidBody collider, RigidBodyFlags flags, float radius = -1)
         {
             IsActive = true;
             RigidBody = collider;
             LinearDampening = 0.001f;
             AngularDampening = 0.05f;
-            Restitution = .05f;
+            Restitution = .5f;
             Gravity = Vector3.Down * 9.8f;
             StaticFriction = 0.25f;
             DynamicFriction = 0.15f;
-            UpdateRigidBodyFlag(flags);
-        }
-
-        public void UpdateRigidBodyFlag(RigidBodyFlags flags)
-        {
-            _rigidBodyFlags = flags;
-            if (flags == RigidBodyFlags.Static)
-                RigidBody.UpdateTensor(0);
+            RigidBodyMovementType = flags;
+            _userRadius = radius;
         }
 
         public override void Initalize()
         {
-            RigidBody.Init(_entity);
+            if (_userRadius != -1)
+                RigidBody.Init(_entity.Position.WorldMatrix, _userRadius, RigidBodyMovementType == RigidBodyFlags.Static ? 0 : 1);
+            else
+                RigidBody.Init(_entity.Position.WorldMatrix, 1, RigidBodyMovementType == RigidBodyFlags.Static ? 0 : 1);
             Stop();
         }
 
         public void Update(float deltaTime)
         {
-            if (RigidBodyFlag == RigidBodyFlags.Static)
+            if (RigidBodyMovementType == RigidBodyFlags.Static)
             {
                 Stop();
                 return;
@@ -145,15 +137,15 @@ namespace Project1.Data.Components
             LinearVelocity += force * RigidBody.InverseMass;
         }
 
-        public void DebugDraw(ref SpriteBatch batch, ref GraphicsDevice graphics, ref Camera cam)
+        public void DebugDraw(RenderingSystem render)
         {
             var pos = _entity.Position;
 
-            DrawingUtils.DrawMatrix(graphics, pos.WorldMatrix);
+            DrawingUtils.DrawMatrix(render, pos.WorldMatrix);
 
-            DrawingUtils.DrawLine(graphics, pos.Position, Acceleration, Color.Salmon);
-            DrawingUtils.DrawLine(graphics, pos.Position, LinearVelocity, Color.Orange);
-            DrawingUtils.DrawLine(graphics, pos.Position, AngularVelocity, Color.Pink);
+            DrawingUtils.DrawLine(render, pos.Position, Acceleration, Color.Salmon);
+            DrawingUtils.DrawLine(render, pos.Position, LinearVelocity, Color.Orange);
+            DrawingUtils.DrawLine(render, pos.Position, AngularVelocity, Color.Pink);
         }
 
         public void Stop()

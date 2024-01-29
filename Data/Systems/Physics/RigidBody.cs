@@ -21,12 +21,12 @@ namespace Project1.Data.Systems.Physics
 
     internal abstract class RigidBody
     {
-        public static RigidBody Sphere => new SpherePhysics();
+        public static RigidBody Sphere => new RigidBodySphere();
         //public static readonly PhysicsBody Capsule = new SpherePhysics();
         //public static readonly PhysicsBody Cylinder = new SpherePhysics();
         //public static readonly PhysicsBody Box = new SpherePhysics();
 
-        public static RigidBody Plane => new PlanePhysics();
+        public static RigidBody Plane => new RigidBodyPlane();
 
         public RigidBodyType RigidBodyType { get; protected set; }
         public Matrix WorldMatrix;
@@ -37,28 +37,29 @@ namespace Project1.Data.Systems.Physics
         public Matrix InverseInertiaTensor { get; protected set; }
         public float BoundingSphere { get; protected set; }
 
-        public abstract void Init(Entity ent);
-        public void UpdateTensor(float mass)
+        public virtual void Init(Matrix worldMatrix, float radius, float mass)
         {
+            WorldMatrix = worldMatrix;
             Mass = mass;
             InverseMass = mass == 0 ? 0 : 1 / Mass;
-            UpdateTensorInternal();
+            BoundingSphere = radius;
+
+            if (Mass >= 0.001f)
+                UpdateTensorInternal();
+            else
+            {
+                InertiaTensor = Matrix.Identity;
+                InverseInertiaTensor = InertiaTensor;
+            }
         }
         protected abstract void UpdateTensorInternal();
     }
 
-    internal class PlanePhysics : RigidBody
+    internal class RigidBodyPlane : RigidBody
     {
-        public PlanePhysics()
+        public RigidBodyPlane()
         {
             RigidBodyType = RigidBodyType.Plane;
-        }
-
-        public override void Init(Entity ent)
-        {
-            WorldMatrix = ent.Position.WorldMatrix;
-            UpdateTensor(0);
-            BoundingSphere = 100;
         }
 
         protected override void UpdateTensorInternal()
@@ -73,27 +74,19 @@ namespace Project1.Data.Systems.Physics
         }
     }
 
-    internal class SpherePhysics : RigidBody
+    internal class RigidBodySphere : RigidBody
     {
         public float Radius;
 
-        public SpherePhysics()
+        public RigidBodySphere()
         {
             RigidBodyType = RigidBodyType.Sphere;
         }
 
-        public override void Init(Entity ent)
+        public override void Init(Matrix worldMatrix, float radius, float mass)
         {
-            WorldMatrix = ent.Position.WorldMatrix;
-            var mesh = ent.GetComponent<MeshComponent>();
-            if (mesh != null)
-                Radius = mesh.Model.BoundingSphereRadius;
-            else
-                Radius = 1;
-            Radius = 1;
-
-            BoundingSphere = Radius;
-            UpdateTensor(1f);
+            Radius = radius;
+            base.Init(worldMatrix, radius, mass);
         }
 
         protected override void UpdateTensorInternal()

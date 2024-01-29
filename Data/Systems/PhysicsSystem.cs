@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Project1.Data.Components;
 using Project1.Data.Systems.Physics;
+using Project1.Data.Systems.RenderMessages;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,9 +34,10 @@ namespace Project1.Data.Systems
             _world = world;
             _debugMode = false;
             _render = render;
+            _render.DoDraw += DebugDraw;
         }
 
-        public void DebugDraw(SpriteBatch batch, GraphicsDevice graphics, Camera cam)
+        public void DebugDraw()
         {
             if (_debugMode)
             {
@@ -44,7 +46,7 @@ namespace Project1.Data.Systems
                     return;
 
                 foreach (var physicObject in physicsObjects)
-                    physicObject.DebugDraw(ref batch, ref graphics, ref cam);
+                    physicObject.DebugDraw(_render);
             }
         }
 
@@ -67,7 +69,7 @@ namespace Project1.Data.Systems
                 // naive approach - use trees in the future
                 foreach (var target in physicsObjects)
                 {
-                    if (target.RigidBodyFlag == RigidBodyFlags.Static || target.RigidBodyFlag == RigidBodyFlags.Kinematic || !target.IsActive)
+                    if (target.RigidBodyMovementType == RigidBodyFlags.Static || target.RigidBodyMovementType == RigidBodyFlags.Kinematic || !target.IsActive)
                         continue;
                     
                     foreach (var contact in physicsObjects)
@@ -78,10 +80,13 @@ namespace Project1.Data.Systems
                             CollisionSolver.Solve(target, contact, out col);
                             if (col.Containment == ContainmentType.Intersects)
                             {
-                                Vector3 rc = contact.RigidBody.WorldMatrix.Translation - col.PositionWorld;
-                                Vector3 rt = target.RigidBody.WorldMatrix.Translation - col.PositionWorld;
+                                Vector3 rc = col.ContactRelative;
+                                Vector3 rt = col.TargetRelative;
 
-                                Console.WriteLine(col.PositionWorld);
+                                // _render.EnqueueMessage(new RenderMessageDrawLine(Vector3.Zero, col.PositionWorld, Color.Pink));
+                                // _render.EnqueueMessage(new RenderMessageDrawLine(Vector3.Zero, rc, Color.Red)); // up
+                                // //_render.EnqueueMessage(new RenderMessageDrawLine(Vector3.Zero, rt, Color.Green)); //down
+                                // _render.EnqueueMessage(new RenderMessageDrawLine(Vector3.Zero, col.Normal, Color.Orange)); //up
 
                                 Vector3 velDueToRotContact = Vector3.Cross(contact.AngularVelocity, rc);
                                 Vector3 velDueToRotTarget = Vector3.Cross(target.AngularVelocity, rt);
@@ -93,7 +98,7 @@ namespace Project1.Data.Systems
                                     continue;
                                 target.RigidBody.WorldMatrix.Translation += col.Normal * col.Penetration;
 
-                                float e = 1;// Math.Min(contact.Restitution, target.Restitution);
+                                float e = Math.Min(contact.Restitution, target.Restitution);
                                 Matrix invc = contact.RigidBody.InverseInertiaTensor;
                                 Matrix invt = target.RigidBody.InverseInertiaTensor;
 
@@ -109,6 +114,8 @@ namespace Project1.Data.Systems
 
                                 float Jmod = (-(1 + e) * contactMag) / denominator;
                                 Vector3 J = col.Normal * Jmod;
+
+                                _render.EnqueueMessage(new RenderMessageDrawLine(col.PositionWorld, col.PositionWorld + J, Color.Black));
 
                                 contact.AddForce(J);
                                 target.AddForce(-J);
