@@ -35,9 +35,16 @@ namespace Project1.Data.Systems.Physics
         public float InverseMass { get; protected set; }
         public Matrix InertiaTensor { get; protected set; }
         public Matrix InverseInertiaTensor { get; protected set; }
+        public float BoundingSphere { get; protected set; }
 
         public abstract void Init(Entity ent);
-        public abstract void UpdateTensor(float mass);
+        public void UpdateTensor(float mass)
+        {
+            Mass = mass;
+            InverseMass = mass == 0 ? 0 : 1 / Mass;
+            UpdateTensorInternal();
+        }
+        protected abstract void UpdateTensorInternal();
     }
 
     internal class PlanePhysics : RigidBody
@@ -50,13 +57,12 @@ namespace Project1.Data.Systems.Physics
         public override void Init(Entity ent)
         {
             WorldMatrix = ent.Position.WorldMatrix;
-            UpdateTensor(1);
+            UpdateTensor(0);
+            BoundingSphere = 100;
         }
 
-        public override void UpdateTensor(float mass)
+        protected override void UpdateTensorInternal()
         {
-            Mass = 1;
-            InverseMass = 1;
             InertiaTensor = new Matrix(
                 new Vector4(1, 0, 0, 0),
                 new Vector4(0, 1, 0, 0),
@@ -85,19 +91,19 @@ namespace Project1.Data.Systems.Physics
             else
                 Radius = 1;
             Radius = 1;
-            UpdateTensor(1);
+
+            BoundingSphere = Radius;
+            UpdateTensor(1f);
         }
 
-        public override void UpdateTensor(float mass)
+        protected override void UpdateTensorInternal()
         {
-            Mass = mass;
-            InverseMass = 1 / Mass;
-            float val = 0.4f * mass * Radius * Radius;
+            float val = 0.4f * Mass * Radius * Radius;
             InertiaTensor = new Matrix(
                 new Vector4(val, 0, 0, 0),
                 new Vector4(0, val, 0, 0),
                 new Vector4(0, 0, val, 0),
-                new Vector4(0, 0, 0, 1)
+                new Vector4(0, 0, 0,   1)
             );
             InverseInertiaTensor = Matrix.Invert(InertiaTensor);
         }

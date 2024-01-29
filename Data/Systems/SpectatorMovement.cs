@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Project1.Data.Systems
 {
-    internal class PlayerMovement : SystemComponent
+    internal class SpectatorMovement : SystemComponent
     {
         private float yaw = 0, pitch = 0;
         public bool Controlling = true;
@@ -16,7 +16,7 @@ namespace Project1.Data.Systems
         private World _world;
         private Camera _camera;
 
-        public PlayerMovement(World world, Camera camera)
+        public SpectatorMovement(World world, Camera camera)
         {
             _camera = camera;
             _world = world;

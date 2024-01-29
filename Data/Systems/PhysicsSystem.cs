@@ -14,6 +14,7 @@ namespace Project1.Data.Systems
     // General concepts taken from
     // https://theswissbay.ch/pdf/Gentoomen%20Library/Game%20Development/Programming/Game%20Physics%20Engine%20Development.pdf
     // http://www.r-5.org/files/books/computers/algo-list/realtime-3d/Christer_Ericson-Real-Time_Collision_Detection-EN.pdf
+    // http://www.chrishecker.com/images/b/bb/Gdmphys4.pdf
 
     internal class PhysicsSystem : SystemComponent
     {
@@ -64,42 +65,90 @@ namespace Project1.Data.Systems
                 // naive approach - use trees in the future
                 foreach (var target in physicsObjects)
                 {
-                    if (target.RigidBodyFlag == RigidBodyFlags.Static || target.RigidBodyFlag == RigidBodyFlags.Kinematic)
+                    if (target.RigidBodyFlag == RigidBodyFlags.Static || target.RigidBodyFlag == RigidBodyFlags.Kinematic || !target.IsActive)
                         continue;
                     
                     foreach (var contact in physicsObjects)
                     {
-                        if (target != contact)
+                        if (target != contact && Vector3.Distance(target.RigidBody.WorldMatrix.Translation, contact.RigidBody.WorldMatrix.Translation) <= target.RigidBody.BoundingSphere + contact.RigidBody.BoundingSphere)
                         {
                             Collision col;
                             CollisionSolver.Solve(target, contact, out col);
                             if (col.Containment == ContainmentType.Intersects)
                             {
-                                //Console.WriteLine($"collision detected {col.Penetration}");
+                                Vector3 rc = contact.RigidBody.WorldMatrix.Translation - col.PositionWorld;
+                                Vector3 rt = target.RigidBody.WorldMatrix.Translation - col.PositionWorld;
+
+                                Vector3 velDueToRotContact = Vector3.Cross(contact.AngularVelocity, rc);
+                                Vector3 velDueToRotTarget = Vector3.Cross(target.AngularVelocity, rt);
+                                
+                                Vector3 relativeVel = (contact.LinearVelocity + velDueToRotContact) - (target.LinearVelocity + velDueToRotTarget);
+
+                                float contactMag = Vector3.Dot(relativeVel, col.Normal);
+                                if (contactMag < 0f)
+                                    continue;
                                 target.RigidBody.WorldMatrix.Translation += col.Normal * col.Penetration;
 
-                                Vector3 relativeVel = contact.LinearVelocity - target.LinearVelocity;
+                                float e = Math.Min(contact.Restitution, target.Restitution);
+                                Matrix invc = contact.RigidBody.InverseInertiaTensor;
+                                Matrix invt = target.RigidBody.InverseInertiaTensor;
 
-                                if (Vector3.Dot(relativeVel, col.Normal) > 0f)
-                                    continue;
+                                Vector3 angularVelChangec = Vector3.Cross(rc, col.Normal);
+                                angularVelChangec = Vector3.Transform(angularVelChangec, invc);
+                                angularVelChangec = Vector3.Cross(angularVelChangec, rc);
+                                float denominator = contact.RigidBody.InverseMass;// + Vector3.Dot(angularVelChangec, col.Normal);
 
-                                float elasticity = Math.Min(contact.Restitution, target.Restitution);
-                                float impulseMag = -(1f + elasticity) * Vector3.Dot(relativeVel, col.Normal);
-                                impulseMag /= (target.RigidBody.InverseMass + contact.RigidBody.InverseMass);
+                                Vector3 angularVelChanget = Vector3.Cross(rt, col.Normal);
+                                angularVelChanget = Vector3.Transform(angularVelChanget, invt);
+                                angularVelChanget = Vector3.Cross(angularVelChanget, rt);
+                                denominator += target.RigidBody.InverseMass;// + Vector3.Dot(angularVelChanget, col.Normal);
 
-                                Vector3 velocityImpulse = col.Normal * impulseMag;
+                                float Jmod = (-(1 + e) * contactMag) / denominator;
+                                Vector3 J = col.Normal * Jmod;
 
-                                contact.AddForce(velocityImpulse);
-                                target.AddForce(-velocityImpulse);
+                                contact.AddForce(J);
+                                target.AddForce(-J);
 
-                                Vector3 relPos1 = contact.RigidBody.WorldMatrix.Translation - target.RigidBody.WorldMatrix.Translation;
-                                Vector3 relPos2 = target.RigidBody.WorldMatrix.Translation - contact.RigidBody.WorldMatrix.Translation;
-                                
-                                Vector3 angularImpulse1 = Vector3.Cross(relPos1, velocityImpulse);
-                                Vector3 angularImpulse2 = Vector3.Cross(relPos2, -velocityImpulse);
-                                
-                                contact.AddTorque(angularImpulse1);
-                                target.AddTorque(angularImpulse2);
+                                // contact.AddTorque(angularVelChangea);
+                                // target.AddTorque(angularVelChangeb);
+
+                                //Vector3 normalImpulse = col.Normal * JMag;
+
+
+                                // Friction code
+
+                                // Vector3 tangent = relativeVel - Vector3.Dot(relativeVel, col.Normal) * col.Normal;
+                                // if (tangent.LengthSquared() > 0.001f)
+                                //     tangent.Normalize();
+                                // 
+                                // float staticFriction = ((target.StaticFriction + contact.StaticFriction) * 0.5f);
+                                // float dynamicFriction = ((target.DynamicFriction + contact.DynamicFriction) * 0.5f);
+                                // 
+                                // float frictionImpulseMag = -Vector3.Dot(relativeVel, tangent);
+                                // frictionImpulseMag /= (target.RigidBody.InverseMass + contact.RigidBody.InverseMass);
+                                // 
+                                // Vector3 frictionImpulse;
+                                // if (Math.Abs(frictionImpulseMag) < JMag * staticFriction)
+                                //     frictionImpulse = -tangent * frictionImpulseMag;
+                                // else
+                                //     frictionImpulse = tangent * JMag * dynamicFriction;
+
+                                // End Friction code
+
+
+                                // Vector3 totalImpulse = normalImpulse; //+ frictionImpulse;
+                                // 
+                                // contact.AddForce(totalImpulse);
+                                // target.AddForce(-totalImpulse);
+                                // 
+                                // // Vector3 relPos1 = contact.RigidBody.WorldMatrix.Translation - target.RigidBody.WorldMatrix.Translation;
+                                // // Vector3 relPos2 = target.RigidBody.WorldMatrix.Translation - contact.RigidBody.WorldMatrix.Translation;
+                                // 
+                                // Vector3 angularImpulse1 = Vector3.Cross(ra, totalImpulse);
+                                // Vector3 angularImpulse2 = Vector3.Cross(rb, -totalImpulse);
+                                // 
+                                // contact.AddTorque(angularImpulse1);
+                                // target.AddTorque(angularImpulse2);
                             }
                         }
                     }

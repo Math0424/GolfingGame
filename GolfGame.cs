@@ -22,7 +22,7 @@ namespace Project1
 
             _world = new World(this, "Level1")
                 .AddSystem<Camera>()
-                .AddSystem<PlayerMovement>()
+                .AddSystem<SpectatorMovement>()
                 .AddSystem<RenderingSystem>()
                 .AddSystem<PhysicsSystem>()
                 .AddSystem<HudSystem>();
@@ -41,7 +41,7 @@ namespace Project1
             //    .AddComponent(new PhysicsComponent(PhysicsBody.Plane, RigidBodyFlags.Static));
 
             Random r = new Random();
-            for (int i = 20; i <= 100; i++)
+            for (int i = 2; i <= 20; i++)
             {
                 PrimitivePhysicsComponent comp = new PrimitivePhysicsComponent(RigidBody.Sphere, RigidBodyFlags.Dynamic);
                 var ent = _world.CreateEntity()
@@ -49,7 +49,7 @@ namespace Project1
                     .AddComponent(new MeshComponent("models/sphere"))
                     .AddComponent(comp);
                 ent.Position.SetLocalMatrix(Matrix.CreateScale(.8f));
-                //comp.LinearVelocity = Vector3.Down * 1f * i;
+                //comp.LinearVelocity = Vector3.Down * 5;
                 //comp.AngularVelocity = Vector3.One;
             }
 

@@ -27,6 +27,9 @@ namespace Project1.Data.Components
             set => UpdateRigidBodyFlag(value);
         }
 
+        public Vector3 Acceleration { get; private set; }
+        private Vector3 _prevPosition;
+
         public Vector3 AngularVelocity;
         public float AngularDampening;
 
@@ -40,6 +43,9 @@ namespace Project1.Data.Components
 
         public Vector3 Gravity;
         public float Restitution;
+        public float StaticFriction;
+        public float DynamicFriction;
+
 
         private RigidBodyFlags _rigidBodyFlags;
 
@@ -55,11 +61,14 @@ namespace Project1.Data.Components
 
         public PrimitivePhysicsComponent(RigidBody collider, RigidBodyFlags flags)
         {
+            IsActive = true;
             RigidBody = collider;
-            LinearDampening = 0.99999f;
-            AngularDampening = 0.95f;
-            Restitution = 0.5f;
+            LinearDampening = 0.001f;
+            AngularDampening = 0.05f;
+            Restitution = .05f;
             Gravity = Vector3.Down * 9.8f;
+            StaticFriction = 0.25f;
+            DynamicFriction = 0.15f;
             UpdateRigidBodyFlag(flags);
         }
 
@@ -79,22 +88,41 @@ namespace Project1.Data.Components
         public void Update(float deltaTime)
         {
             if (RigidBodyFlag == RigidBodyFlags.Static)
+            {
+                Stop();
                 return;
+            }
+
+            _prevPosition = RigidBody.WorldMatrix.Translation;
 
             LinearVelocity += Gravity * deltaTime;
 
             Matrix newPos = RigidBody.WorldMatrix;
-            newPos.Translation += LinearVelocity * deltaTime;
-            newPos += AngularVelocity.CrossMatrix() * deltaTime * newPos;
+            newPos.Translation += (LinearVelocity * deltaTime);
 
-            LinearVelocity *= LinearDampening;
-            AngularVelocity *= AngularDampening;
+            float angle = AngularVelocity.Length() * deltaTime;
+            if (angle > 0.001f)
+            {
+                Vector3 axis = Vector3.Normalize(AngularVelocity);
+                Quaternion rotation;
+                Quaternion.CreateFromRotationMatrix(ref newPos, out rotation);
+                rotation = Quaternion.Normalize(Quaternion.CreateFromAxisAngle(axis, angle) * rotation);
 
-            // speed cap for sad sad physics engine
+                Matrix rotationMatrix = Matrix.CreateFromQuaternion(rotation);
+                RigidBody.WorldMatrix = rotationMatrix;
+                RigidBody.WorldMatrix.Translation = newPos.Translation;
+            }
+            else
+                RigidBody.WorldMatrix = newPos;
+
+            LinearVelocity *= (1 - LinearDampening * deltaTime);
+            AngularVelocity *= (1 - AngularDampening * deltaTime);
+
             float val = LinearVelocity.Length();
-            LinearVelocity = Vector3.Normalize(LinearVelocity) * Math.Max(val, .5f);
+            if (val != 0f)
+                LinearVelocity = Vector3.Normalize(LinearVelocity) * Math.Min(val, 20f);
 
-            RigidBody.WorldMatrix = newPos;
+            Acceleration = _prevPosition - RigidBody.WorldMatrix.Translation;
         }
 
         public void UpdateWorldMatrix()
@@ -123,12 +151,14 @@ namespace Project1.Data.Components
 
             DrawingUtils.DrawMatrix(graphics, pos.WorldMatrix);
 
+            DrawingUtils.DrawLine(graphics, pos.Position, Acceleration, Color.Salmon);
             DrawingUtils.DrawLine(graphics, pos.Position, LinearVelocity, Color.Orange);
             DrawingUtils.DrawLine(graphics, pos.Position, AngularVelocity, Color.Pink);
         }
 
         public void Stop()
         {
+            _prevPosition = RigidBody.WorldMatrix.Translation;
             AngularVelocity = Vector3.Zero;
             LinearVelocity = Vector3.Zero;
         }
