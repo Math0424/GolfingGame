@@ -63,7 +63,7 @@ namespace Project1.Data.Components
                     graphics.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, _vertexPositionTexture, 0, 4, _vertexIndicesNoBack, 0, 2);
                     break;
                 case BillboardOption.EntityFacing:
-                    mat = _entity.Position.WorldMatrix;
+                    mat = _entity.Position.TransformMatrix;
                     effect.World = mat;
                     effect.CurrentTechnique.Passes[0].Apply();
                     // draw both front and back

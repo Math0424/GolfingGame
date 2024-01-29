@@ -21,23 +21,27 @@ namespace Project1.Data.Components
 
     internal class PrimitivePhysicsComponent : EntityComponent
     {
+        public RigidBodyFlags RigidBodyFlag
+        {
+            get => _rigidBodyFlags;
+            set => UpdateRigidBodyFlag(value);
+        }
+
         public Vector3 AngularVelocity;
         public float AngularDampening;
-
-        private Vector3 _prevAngularMomentum;
 
         public Vector3 LinearVelocity;
         public float LinearDampening;
 
-        private Vector3 _prevLinearMomentum;
-
         public Vector3 CenterOfMassWorld;
 
-        public RigidBodyFlags RigidBodyFlag;
         public int PhysicsLayer;
         public bool IsActive;
 
         public Vector3 Gravity;
+        public float Restitution;
+
+        private RigidBodyFlags _rigidBodyFlags;
 
         public RigidBody RigidBody { get; private set; }
         // bool IsMoving
@@ -51,11 +55,19 @@ namespace Project1.Data.Components
 
         public PrimitivePhysicsComponent(RigidBody collider, RigidBodyFlags flags)
         {
-            RigidBodyFlag = flags;
             RigidBody = collider;
             LinearDampening = 0.99999f;
-            AngularDampening = 0.999f;
-            Gravity = Vector3.Down;//* 9.8f;
+            AngularDampening = 0.95f;
+            Restitution = 0.5f;
+            Gravity = Vector3.Down * 9.8f;
+            UpdateRigidBodyFlag(flags);
+        }
+
+        public void UpdateRigidBodyFlag(RigidBodyFlags flags)
+        {
+            _rigidBodyFlags = flags;
+            if (flags == RigidBodyFlags.Static)
+                RigidBody.UpdateTensor(0);
         }
 
         public override void Initalize()
@@ -69,14 +81,18 @@ namespace Project1.Data.Components
             if (RigidBodyFlag == RigidBodyFlags.Static)
                 return;
 
+            LinearVelocity += Gravity * deltaTime;
+
             Matrix newPos = RigidBody.WorldMatrix;
-            newPos.Translation += deltaTime * LinearVelocity * LinearDampening + (Gravity * deltaTime);
+            newPos.Translation += LinearVelocity * deltaTime;
             newPos += AngularVelocity.CrossMatrix() * deltaTime * newPos;
 
-            _prevAngularMomentum = AngularVelocity;
-            _prevLinearMomentum = LinearVelocity;
             LinearVelocity *= LinearDampening;
             AngularVelocity *= AngularDampening;
+
+            // speed cap for sad sad physics engine
+            float val = LinearVelocity.Length();
+            LinearVelocity = Vector3.Normalize(LinearVelocity) * Math.Max(val, .5f);
 
             RigidBody.WorldMatrix = newPos;
         }
@@ -91,16 +107,9 @@ namespace Project1.Data.Components
             return LinearVelocity + Vector3.Cross(AngularVelocity, point - CenterOfMassWorld);
         }
 
-        public void AddImpulse(Vector3 force, Vector3 position)
+        public void AddTorque(Vector3 torque)
         {
-            LinearVelocity += force * RigidBody.InverseMass;
-            AngularVelocity += Vector3.Transform(Vector3.Cross(force, position), RigidBody.InverseInertiaTensor);
-        }
-
-        public void AddForce(Vector3 force, Vector3 torque)
-        {
-            LinearVelocity += force;
-            AngularVelocity += torque;
+            AngularVelocity += Vector3.Transform(torque, RigidBody.InverseInertiaTensor);
         }
 
         public void AddForce(Vector3 force)
@@ -121,9 +130,7 @@ namespace Project1.Data.Components
         public void Stop()
         {
             AngularVelocity = Vector3.Zero;
-            _prevAngularMomentum = Vector3.Zero;
             LinearVelocity = Vector3.Zero;
-            _prevLinearMomentum = Vector3.Zero;
         }
 
     }

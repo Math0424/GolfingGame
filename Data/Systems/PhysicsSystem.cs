@@ -13,15 +13,13 @@ namespace Project1.Data.Systems
 {
     // General concepts taken from
     // https://theswissbay.ch/pdf/Gentoomen%20Library/Game%20Development/Programming/Game%20Physics%20Engine%20Development.pdf
-    // https://graphics.stanford.edu/courses/cs448b-00-winter/papers/phys_model.pdf
     // http://www.r-5.org/files/books/computers/algo-list/realtime-3d/Christer_Ericson-Real-Time_Collision_Detection-EN.pdf
-    // https://www.cs.cmu.edu/%7Ebaraff/sigcourse/notesd2.pdf#page=17
 
     internal class PhysicsSystem : SystemComponent
     {
         private World _world;
         private double _accumulatedTime;
-        private const float physicsTimeStep = 0.001f;
+        private const float physicsTimeStep = 0.005f;
         private Game _game;
 
         private bool _debugMode;
@@ -63,7 +61,7 @@ namespace Project1.Data.Systems
                     x.Update(physicsTimeStep);
 
                 // TODO fix this
-                // naive approach - use oct tree in the future
+                // naive approach - use trees in the future
                 foreach (var target in physicsObjects)
                 {
                     if (target.RigidBodyFlag == RigidBodyFlags.Static || target.RigidBodyFlag == RigidBodyFlags.Kinematic)
@@ -77,20 +75,31 @@ namespace Project1.Data.Systems
                             CollisionSolver.Solve(target, contact, out col);
                             if (col.Containment == ContainmentType.Intersects)
                             {
+                                //Console.WriteLine($"collision detected {col.Penetration}");
+                                target.RigidBody.WorldMatrix.Translation += col.Normal * col.Penetration;
+
                                 Vector3 relativeVel = contact.LinearVelocity - target.LinearVelocity;
-                                float elasticity = 0.8f;
-                                float impuseMag = -(1 + elasticity) * Vector3.Dot(relativeVel, col.Normal) / (target.RigidBody.InverseMass + contact.RigidBody.InverseMass);
 
-                                Vector3 velocityImpulse = col.Normal * impuseMag;
+                                if (Vector3.Dot(relativeVel, col.Normal) > 0f)
+                                    continue;
 
-                                Vector3 relPos1 = Vector3.Transform(contact.RigidBody.WorldMatrix.Translation - target.RigidBody.WorldMatrix.Translation, contact.RigidBody.InverseInertiaTensor);
-                                Vector3 relPos2 = Vector3.Transform(target.RigidBody.WorldMatrix.Translation - contact.RigidBody.WorldMatrix.Translation, target.RigidBody.InverseInertiaTensor);
+                                float elasticity = Math.Min(contact.Restitution, target.Restitution);
+                                float impulseMag = -(1f + elasticity) * Vector3.Dot(relativeVel, col.Normal);
+                                impulseMag /= (target.RigidBody.InverseMass + contact.RigidBody.InverseMass);
 
+                                Vector3 velocityImpulse = col.Normal * impulseMag;
+
+                                contact.AddForce(velocityImpulse);
+                                target.AddForce(-velocityImpulse);
+
+                                Vector3 relPos1 = contact.RigidBody.WorldMatrix.Translation - target.RigidBody.WorldMatrix.Translation;
+                                Vector3 relPos2 = target.RigidBody.WorldMatrix.Translation - contact.RigidBody.WorldMatrix.Translation;
+                                
                                 Vector3 angularImpulse1 = Vector3.Cross(relPos1, velocityImpulse);
                                 Vector3 angularImpulse2 = Vector3.Cross(relPos2, -velocityImpulse);
-
-                                contact.AddForce(velocityImpulse, angularImpulse1);
-                                target.AddForce(-velocityImpulse, angularImpulse2);
+                                
+                                contact.AddTorque(angularImpulse1);
+                                target.AddTorque(angularImpulse2);
                             }
                         }
                     }

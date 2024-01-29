@@ -47,21 +47,21 @@ namespace Project1.Data.Systems.Physics
         {
             collision = default;
             float planeOffset = Vector3.Dot(plane.WorldMatrix.Translation, plane.WorldMatrix.Forward);
-            Vector3 planeDirection = plane.WorldMatrix.Forward;
+            Vector3 planeDirection = plane.WorldMatrix.Backward;
             Vector3 spherePos = sphere.WorldMatrix.Translation;
 
             float sphereDistance = Vector3.Dot(spherePos, planeDirection) - sphere.Radius - planeOffset;
 
-            if (sphereDistance >= 0)
+            if (sphereDistance > 0 || sphereDistance < -sphere.Radius)
                 return;
 
             collision.Normal = planeDirection;
+
             collision.PositionRelative = spherePos - planeDirection * (sphereDistance + sphere.Radius);
             collision.PositionWorld = spherePos + collision.PositionRelative;
+
             collision.Penetration = -sphereDistance;
             collision.Containment = ContainmentType.Intersects;
-
-            Console.WriteLine(collision.PositionRelative);
         }
 
         public static void SolveSphereAndSphere(SpherePhysics sphere1, SpherePhysics sphere2, out Collision collision)
