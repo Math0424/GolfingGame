@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Project1.Data.Systems;
+using Project1.Data.Systems.RenderMessages;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,11 +10,9 @@ using System.Threading.Tasks;
 
 namespace Project1.Data.Components
 {
-    internal class SpriteComponent : EntityComponent
+    internal class SpriteComponent : RenderableComponent
     {
-        private static SpriteFont _font;
         private string _assetName;
-        private Texture2D _texture;
 
         public SpriteComponent(string assetName)
         {
@@ -22,35 +21,27 @@ namespace Project1.Data.Components
 
         public override void Initalize()
         {
-            _texture = _entity.World.Game.Content.Load<Texture2D>(_assetName);
-            if (_font == null)
-                _font = _entity.World.Game.Content.Load<SpriteFont>("Fonts/Debug");
+
         }
 
-        public float ZDepth(ref Camera cam)
-        {
-            return Vector3.DistanceSquared(_entity.Position.Position, cam.Translation);
-        }
-
-        public void Draw(ref SpriteBatch batch, ref GraphicsDevice graphics, ref Camera cam)
+        public override void Draw(RenderingSystem system, ref Camera cam)
         {
             var pos = _entity.Position.Position;
             var newPos = cam.WorldToScreen(ref pos);
-
+            float depth = Vector3.DistanceSquared(_entity.Position.Position, cam.Translation);
             Rectangle r = new Rectangle((int)newPos.X, (int)newPos.Y, (int)(30 * (1 - newPos.Z)), (int)(30 * (1 - newPos.Z)));
-
-            batch.Draw(_texture, r, Color.White);
+            system.EnqueueMessage(new RenderMessageDrawSprite(_assetName, r, depth));
         }
 
-        public void DebugDraw(ref SpriteBatch batch, ref GraphicsDevice graphics, ref Camera cam)
-        {
-            var pos = _entity.Position;
-            Vector3 posx = pos.Position;
-            Vector3 screen = cam.WorldToScreen(ref posx);
-            batch.DrawString(_font, $"Sprite\nID: {_entity.Id}", new Vector2(screen.X, screen.Y), Color.Transparent, 0, Vector2.Zero, 1 - screen.Z, default, 0);
-        }
+        // public void DebugDraw(ref SpriteBatch batch, ref GraphicsDevice graphics, ref Camera cam)
+        // {
+        //     var pos = _entity.Position;
+        //     Vector3 posx = pos.Position;
+        //     Vector3 screen = cam.WorldToScreen(ref posx);
+        //     batch.DrawString(_font, $"Sprite\nID: {_entity.Id}", new Vector2(screen.X, screen.Y), Color.Transparent, 0, Vector2.Zero, 1 - screen.Z, default, 0);
+        // }
 
-        public bool IsVisible(ref Camera cam)
+        public override bool IsVisible(ref Camera cam)
         {
             return cam.IsInFrustum(_entity.Position.Position);
         }

@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Project1.Data.Systems;
+using Project1.Data.Systems.RenderMessages;
 using Project1.Data.Tools;
 using System;
 using System.Collections.Generic;
@@ -25,7 +26,6 @@ namespace Project1.Data.Components
     {
         // TODO : possible memory leak if lots unique models are created and then never used again
         private static Dictionary<string, ModelInfo> cache = new Dictionary<string, ModelInfo>();
-        private static SpriteFont _font;
 
         public ref ModelInfo Model => ref _info;
         public Vector3 ModelCenter => _info.ModelCenter;
@@ -75,10 +75,9 @@ namespace Project1.Data.Components
 
         public override void Initalize()
         {
+            _entity.World.Render.EnqueueMessage(new RenderMessageLoadMesh(_modelName));
             _entity.Position.UpdatedTransforms += UpdateAABB;
             SetModel(_modelName);
-            if (_font == null)
-                _font = _entity.World.Game.Content.Load<SpriteFont>("Fonts/Debug");
         }
 
         public override void Close()
@@ -99,37 +98,37 @@ namespace Project1.Data.Components
             return cam.Frustum.Intersects(AABB);
         }
 
-        public override void Draw(ref BasicEffect effect, ref GraphicsDevice graphics, ref Camera cam)
+        public override void Draw(RenderingSystem rendering, ref Camera cam)
         {
-            _info.Model.Draw(_entity.Position.TransformMatrix, cam.ViewMatrix, cam.ProjectionMatrix);
+            rendering.EnqueueMessage(new RenderMessageDrawMesh(_modelName, _entity.Position.TransformMatrix));
         }
 
-        public override void DebugDraw(ref SpriteBatch batch, ref GraphicsDevice graphics, ref Camera cam)
-        {
-            var pos = _entity.Position;
-            Vector3[] corners = AABB.GetCorners();
-
-            //draw bounding box
-            var vertices = new[] {
-                new VertexPosition(corners[0]), new VertexPosition(corners[1]),
-                new VertexPosition(corners[1]), new VertexPosition(corners[2]),
-                new VertexPosition(corners[2]), new VertexPosition(corners[3]),
-                new VertexPosition(corners[0]), new VertexPosition(corners[3]),
-                new VertexPosition(corners[4]), new VertexPosition(corners[5]),
-                new VertexPosition(corners[5]), new VertexPosition(corners[6]),
-                new VertexPosition(corners[6]), new VertexPosition(corners[7]),
-                new VertexPosition(corners[4]), new VertexPosition(corners[7]),
-                new VertexPosition(corners[0]), new VertexPosition(corners[4]),
-                new VertexPosition(corners[1]), new VertexPosition(corners[5]),
-                new VertexPosition(corners[2]), new VertexPosition(corners[6]),
-                new VertexPosition(corners[3]), new VertexPosition(corners[7])
-            };
-            graphics.DrawUserPrimitives(PrimitiveType.LineList, vertices, 0, 12);
-
-            Vector3 posx = pos.Position;
-            Vector3 screen = cam.WorldToScreen(ref posx);
-            batch.DrawString(_font, $"Mesh\nID: {_entity.Id}\nV:{Model.Verticies}", new Vector2(screen.X, screen.Y), Color.Black, 0, Vector2.Zero, 1 - screen.Z, default, 0);
-        }
+        // public void DebugDraw(ref SpriteBatch batch, ref GraphicsDevice graphics, ref Camera cam)
+        // {
+        //     var pos = _entity.Position;
+        //     Vector3[] corners = AABB.GetCorners();
+        // 
+        //     //draw bounding box
+        //     var vertices = new[] {
+        //         new VertexPosition(corners[0]), new VertexPosition(corners[1]),
+        //         new VertexPosition(corners[1]), new VertexPosition(corners[2]),
+        //         new VertexPosition(corners[2]), new VertexPosition(corners[3]),
+        //         new VertexPosition(corners[0]), new VertexPosition(corners[3]),
+        //         new VertexPosition(corners[4]), new VertexPosition(corners[5]),
+        //         new VertexPosition(corners[5]), new VertexPosition(corners[6]),
+        //         new VertexPosition(corners[6]), new VertexPosition(corners[7]),
+        //         new VertexPosition(corners[4]), new VertexPosition(corners[7]),
+        //         new VertexPosition(corners[0]), new VertexPosition(corners[4]),
+        //         new VertexPosition(corners[1]), new VertexPosition(corners[5]),
+        //         new VertexPosition(corners[2]), new VertexPosition(corners[6]),
+        //         new VertexPosition(corners[3]), new VertexPosition(corners[7])
+        //     };
+        //     graphics.DrawUserPrimitives(PrimitiveType.LineList, vertices, 0, 12);
+        // 
+        //     Vector3 posx = pos.Position;
+        //     Vector3 screen = cam.WorldToScreen(ref posx);
+        //     batch.DrawString(_font, $"Mesh\nID: {_entity.Id}\nV:{Model.Verticies}", new Vector2(screen.X, screen.Y), Color.Black, 0, Vector2.Zero, 1 - screen.Z, default, 0);
+        // }
 
         private void SetModel(string name)
         {

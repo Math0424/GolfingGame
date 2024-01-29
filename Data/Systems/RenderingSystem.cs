@@ -2,10 +2,12 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Project1.Data.Components;
+using Project1.Data.Systems.RenderMessages;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Project1.Data.Systems
@@ -23,17 +25,33 @@ namespace Project1.Data.Systems
         private SpriteBatch _spriteBatch;
         private SpriteEffect _spriteEffect;
 
+
         private GameTime tickTime;
         private bool _debugMode;
         private World _world;
+        private Game _game;
+
+        private List<RenderMessage> _renderMessages;
 
         public RenderingSystem(World world, Game game, Camera camera)
         {
+            _game = game;
             _camera = camera;
             _world = world;
             _graphics = new GraphicsDeviceManager(game);
             world.AddInjectedType(_graphics);
             _graphics.DeviceCreated += GraphicInit;
+            _graphics.DeviceDisposing += StopGraphics;
+
+            _renderMessages = new List<RenderMessage>();
+            _meshes = new Dictionary<string, Model>();
+            _fonts = new Dictionary<string, SpriteFont>();
+            _textures = new Dictionary<string, Texture2D>();
+        }
+
+        private void StopGraphics(object sender, EventArgs e)
+        {
+            Console.WriteLine($"Graphics Disposed");
         }
 
         private void GraphicInit(object sender, EventArgs e)
@@ -59,45 +77,30 @@ namespace Project1.Data.Systems
             //_camera.SetupOrthographic(_graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height);
         }
 
+        // TODO move draw to a different thread away from the main gameloop
         public void Draw(GameTime delta)
         {
             long timeNow = DateTime.Now.Ticks;
-
             _graphicsDevice.Clear(Color.CornflowerBlue);
 
             var drawables = _world.GetEntityComponents<RenderableComponent>();
-            List<RenderableComponent> rendering = new List<RenderableComponent>(drawables.Length);
 
-            _basicEffect.View = _camera.ViewMatrix;
-            _basicEffect.Projection = _camera.ProjectionMatrix;
-            _basicEffect.TextureEnabled = true;
-            _basicEffect.VertexColorEnabled = false;
-
+            int rendering = 0;
             // TODO : some sort of spatial partitioning
             // oct-tree or dynamic sectors
             foreach (var x in drawables)
             {
                 if (x.Visible && x.IsVisible(ref _camera))
                 {
-                    rendering.Add(x);
-                    x.Draw(ref _basicEffect, ref _graphicsDevice, ref _camera);
+                    rendering++;
+                    x.Draw(this, ref _camera);
                 }
             }
 
-            var sprites = _world.GetEntityComponents<SpriteComponent>();
-            if (sprites != null)
-            {
-                _spriteEffect.CurrentTechnique.Passes[0].Apply();
-                _spriteBatch.Begin();
-                
-                sprites = sprites.OrderBy(e => -e.ZDepth(ref _camera)).ToArray();
-                foreach (var x in sprites)
-                    if (x.IsVisible(ref _camera))
-                        x.Draw(ref _spriteBatch, ref _graphicsDevice, ref _camera);
-                
-                _spriteBatch.End();
-            }
-            
+            int renderMessageCount = _renderMessages.Count;
+            ProcessRenderMessages();
+            _renderMessages.Clear();
+
             if (_debugMode)
             {
                 _debugSpriteBatch.Begin();
@@ -109,10 +112,6 @@ namespace Project1.Data.Systems
                 _basicEffect.AmbientLightColor = Vector3.One;
                 _basicEffect.CurrentTechnique.Passes[0].Apply();
 
-                DebugDraw?.Invoke(_debugSpriteBatch, _graphicsDevice, _camera);
-                foreach (var x in rendering)
-                    x.DebugDraw(ref _debugSpriteBatch, ref _graphicsDevice, ref _camera);
-                
                 long ticksTaken = (DateTime.Now.Ticks - timeNow) / 10000;
                 
                 _debugSpriteBatch.DrawString(_font, $"Rendering Debug:\n" +
@@ -121,7 +120,8 @@ namespace Project1.Data.Systems
                     $"FPS: {Math.Round(delta.ElapsedGameTime.TotalSeconds * 1000, 2)}ms {Math.Round((ticksTaken / delta.ElapsedGameTime.TotalMilliseconds) * 100)}%\n" +
                     $"TPS: {Math.Round(tickTime.ElapsedGameTime.TotalSeconds * 1000, 2)}ms\n" +
                     $"Entities: {_world.EntityCount}\n" +
-                    $"Drawn: {rendering.Count()}/{drawables.Count()}\n" +
+                    $"RenderMessages: {renderMessageCount}\n" +
+                    $"Drawn: {rendering}/{drawables.Count()}\n" +
                     $"DrawCount: {_graphicsDevice.Metrics.DrawCount}\n" +
                     $"Triangles: {_graphicsDevice.Metrics.PrimitiveCount}\n" +
                     $"Textures: {_graphicsDevice.Metrics.TextureCount}\n" +
@@ -131,12 +131,104 @@ namespace Project1.Data.Systems
                 _basicEffect.AmbientLightColor = prevAmbientColor;
                 _debugSpriteBatch.End();
             }
+        }
 
-            // I fixed it, hah, im going crazy----
-            // this took too fucking long to figure out
+
+        private Dictionary<string, Model> _meshes;
+        private Dictionary<string, Texture2D> _textures;
+        private Dictionary<string, SpriteFont> _fonts;
+
+        private static VertexPositionTexture[] _quadVertexPositionTexture = new[]
+        {
+            new VertexPositionTexture(new Vector3(-1, 1, 0), new Vector2(0, -1)),
+            new VertexPositionTexture(new Vector3(1, 1, 0), new Vector2(1, -1)),
+            new VertexPositionTexture(new Vector3(1, -1, 0), new Vector2(1, 0)),
+            new VertexPositionTexture(new Vector3(-1, -1, 0), new Vector2(0, 0)),
+        };
+        private static short[] _quadVertexIndicesNoBack = new short[] { 0, 1, 2, 2, 3, 0 };
+        private static short[] _quadVertexIndices = new short[] { 0, 1, 2, 2, 3, 0, 0, 3, 2, 2, 1, 0 };
+
+        private void ProcessRenderMessages()
+        {
+            _basicEffect.World = Matrix.Identity;
+            _basicEffect.View = _camera.ViewMatrix;
+            _basicEffect.Projection = _camera.ProjectionMatrix;
+            _basicEffect.TextureEnabled = true;
+            _basicEffect.VertexColorEnabled = false;
+
             _graphicsDevice.DepthStencilState = DepthStencilState.Default;
             _graphicsDevice.BlendState = BlendState.Opaque;
             _graphicsDevice.SamplerStates[0] = SamplerState.LinearWrap;
+
+            _basicEffect.CurrentTechnique.Passes[0].Apply();
+
+            RenderMessage[] arr = _renderMessages.ToArray();
+            foreach (var message in arr)
+            {
+                switch (message.Type)
+                {
+                    case RenderMessageType.LoadMesh:
+                        var loadMesh = (RenderMessageLoadMesh)message;
+                        _meshes[loadMesh.Model] = _game.Content.Load<Model>(loadMesh.Model);
+                        break;
+                    case RenderMessageType.LoadFont:
+                        var loadFont = (RenderMessageLoadFont)message;
+                        _fonts[loadFont.Font] = _game.Content.Load<SpriteFont>(loadFont.Font);
+                        break;
+                    case RenderMessageType.LoadTexture:
+                        var loadTexture = (RenderMessageLoadTexture)message;
+                        _textures[loadTexture.Texture] = _game.Content.Load<Texture2D>(loadTexture.Texture);
+                        break;
+                    case RenderMessageType.DrawMesh:
+                        var drawMesh = (RenderMessageDrawMesh)message;
+                        _meshes[drawMesh.Model].Draw(drawMesh.Matrix, _camera.ViewMatrix, _camera.ProjectionMatrix);
+                        break;
+                    case RenderMessageType.DrawLine:
+                        var drawLine = (RenderMessageDrawLine)message;
+                        var coloredLineVertices = new[] {
+                            new VertexPositionColor(drawLine.Pos1, drawLine.Color), new VertexPositionColor(drawLine.Pos2, drawLine.Color),
+                        };
+                        _graphicsDevice.DrawUserPrimitives(PrimitiveType.LineList, coloredLineVertices, 0, 1);
+                        break;
+                    case RenderMessageType.DrawQuad:
+                        var drawQuad = (RenderMessageDrawQuad)message;
+                        _basicEffect.TextureEnabled = true;
+                        _basicEffect.Texture = _textures[drawQuad.Texture];
+                        _basicEffect.World = drawQuad.Matrix;
+                        _basicEffect.CurrentTechnique.Passes[0].Apply();
+                        if (drawQuad.DrawBack)
+                            _graphicsDevice.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, _quadVertexPositionTexture, 0, 4, _quadVertexIndices, 0, 4);
+                        else
+                            _graphicsDevice.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, _quadVertexPositionTexture, 0, 4, _quadVertexIndicesNoBack, 0, 2);
+                        _basicEffect.View = _camera.ViewMatrix;
+                        break;
+                }
+            }
+
+            RenderMessage[] depthSpriteBatch = _renderMessages.Where(e => e.Type == RenderMessageType.Depth).OrderBy(e => -((RenderMessageDepth)e).Depth).ToArray();
+            _spriteEffect.CurrentTechnique.Passes[0].Apply();
+            _spriteBatch.Begin();
+            foreach (var sprite in depthSpriteBatch)
+            {
+                switch(sprite.Type & ~RenderMessageType.Depth)
+                {
+                    case RenderMessageType.DrawSprite:
+                        var drawSprite = (RenderMessageDrawSprite)sprite;
+                        _spriteBatch.Draw(_textures[drawSprite.Texture], drawSprite.Rectangle, Color.White);
+                        break;
+                    case RenderMessageType.DrawText:
+                        var drawText = (RenderMessageDrawText)sprite;
+                        _spriteBatch.DrawString(_fonts[drawText.Font], drawText.Text, drawText.Pos, drawText.Color);
+                        break;
+                }
+            }
+            _spriteBatch.End();
+
+        }
+
+        public void EnqueueMessage(RenderMessage message)
+        {
+            _renderMessages.Add(message);
         }
 
         public override void Update(GameTime delta)

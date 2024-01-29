@@ -41,11 +41,11 @@ namespace Project1
             //    .AddComponent(new PhysicsComponent(PhysicsBody.Plane, RigidBodyFlags.Static));
 
             Random r = new Random();
-            for (int i = 2; i <= 20; i++)
+            for (int i = 2; i <= 2; i++)
             {
                 PrimitivePhysicsComponent comp = new PrimitivePhysicsComponent(RigidBody.Sphere, RigidBodyFlags.Dynamic);
                 var ent = _world.CreateEntity()
-                    .AddComponent(new PositionComponent((Vector3.Up * 4 * i) + new Vector3((float)r.NextDouble(), 0, (float)r.NextDouble())))
+                    .AddComponent(new PositionComponent((Vector3.Up * 4 * i) ))//+ new Vector3((float)r.NextDouble(), 0, (float)r.NextDouble())))
                     .AddComponent(new MeshComponent("models/sphere"))
                     .AddComponent(comp);
                 ent.Position.SetLocalMatrix(Matrix.CreateScale(.8f));

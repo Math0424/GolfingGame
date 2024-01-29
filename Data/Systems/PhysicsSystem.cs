@@ -25,12 +25,14 @@ namespace Project1.Data.Systems
 
         private bool _debugMode;
 
+        private RenderingSystem _render;
+
         public PhysicsSystem(World world, RenderingSystem render, Game game)
         {
             _game = game;
             _world = world;
             _debugMode = false;
-            render.DebugDraw += DebugDraw;
+            _render = render;
         }
 
         public void DebugDraw(SpriteBatch batch, GraphicsDevice graphics, Camera cam)
@@ -79,6 +81,8 @@ namespace Project1.Data.Systems
                                 Vector3 rc = contact.RigidBody.WorldMatrix.Translation - col.PositionWorld;
                                 Vector3 rt = target.RigidBody.WorldMatrix.Translation - col.PositionWorld;
 
+                                Console.WriteLine(col.PositionWorld);
+
                                 Vector3 velDueToRotContact = Vector3.Cross(contact.AngularVelocity, rc);
                                 Vector3 velDueToRotTarget = Vector3.Cross(target.AngularVelocity, rt);
                                 
@@ -89,19 +93,19 @@ namespace Project1.Data.Systems
                                     continue;
                                 target.RigidBody.WorldMatrix.Translation += col.Normal * col.Penetration;
 
-                                float e = Math.Min(contact.Restitution, target.Restitution);
+                                float e = 1;// Math.Min(contact.Restitution, target.Restitution);
                                 Matrix invc = contact.RigidBody.InverseInertiaTensor;
                                 Matrix invt = target.RigidBody.InverseInertiaTensor;
 
                                 Vector3 angularVelChangec = Vector3.Cross(rc, col.Normal);
                                 angularVelChangec = Vector3.Transform(angularVelChangec, invc);
-                                angularVelChangec = Vector3.Cross(angularVelChangec, rc);
-                                float denominator = contact.RigidBody.InverseMass;// + Vector3.Dot(angularVelChangec, col.Normal);
+                                Vector3 vRc = Vector3.Cross(angularVelChangec, rc);
+                                float denominator = contact.RigidBody.InverseMass + Vector3.Dot(vRc, col.Normal);
 
                                 Vector3 angularVelChanget = Vector3.Cross(rt, col.Normal);
                                 angularVelChanget = Vector3.Transform(angularVelChanget, invt);
-                                angularVelChanget = Vector3.Cross(angularVelChanget, rt);
-                                denominator += target.RigidBody.InverseMass;// + Vector3.Dot(angularVelChanget, col.Normal);
+                                Vector3 vRt = Vector3.Cross(angularVelChanget, rt);
+                                denominator += target.RigidBody.InverseMass + Vector3.Dot(vRt, col.Normal);
 
                                 float Jmod = (-(1 + e) * contactMag) / denominator;
                                 Vector3 J = col.Normal * Jmod;
@@ -109,11 +113,12 @@ namespace Project1.Data.Systems
                                 contact.AddForce(J);
                                 target.AddForce(-J);
 
-                                // contact.AddTorque(angularVelChangea);
-                                // target.AddTorque(angularVelChangeb);
+                                // contact.AddTorque(angularVelChangec);
+                                // target.AddTorque(angularVelChanget);
 
+                                
+                                
                                 //Vector3 normalImpulse = col.Normal * JMag;
-
 
                                 // Friction code
 
