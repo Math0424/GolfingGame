@@ -58,10 +58,10 @@ namespace Project1.Data.Systems.Physics
 
             collision.Normal = planeDirection;
 
-            collision.ContactRelative = collision.Normal * target.Radius;
-            collision.TargetRelative = Vector3.Zero;
-            collision.PositionWorld = spherePos - planeDirection * (sphereDistance + target.Radius);
+            collision.ContactRelative = Vector3.Zero;
+            collision.TargetRelative = -collision.Normal * target.Radius;
 
+            collision.PositionWorld = spherePos - planeDirection * (sphereDistance + target.Radius);
             collision.Penetration = -sphereDistance;
             collision.Containment = ContainmentType.Intersects;
         }

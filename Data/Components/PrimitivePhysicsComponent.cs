@@ -35,7 +35,7 @@ namespace Project1.Data.Components
         public Vector3 CenterOfMassWorld;
 
         public int PhysicsLayer;
-        public bool IsActive;
+        public bool IsSleeping { get; private set; }
 
         public Vector3 Gravity;
         public float Restitution;
@@ -43,6 +43,9 @@ namespace Project1.Data.Components
         public float DynamicFriction;
 
         private float _userRadius;
+
+        private float[] _velocities;
+        private int velocityPos;
 
         public RigidBody RigidBody { get; private set; }
         // bool IsMoving
@@ -56,16 +59,17 @@ namespace Project1.Data.Components
 
         public PrimitivePhysicsComponent(RigidBody collider, RigidBodyFlags flags, float radius = -1)
         {
-            IsActive = true;
             RigidBody = collider;
-            LinearDampening = 0.001f;
-            AngularDampening = 0.05f;
+            LinearDampening = 0.6f;
+            AngularDampening = 0.5f;
             Restitution = .5f;
             Gravity = Vector3.Down * 9.8f;
-            StaticFriction = 0.25f;
-            DynamicFriction = 0.15f;
+            StaticFriction = 0.4f;
+            DynamicFriction = 0.2f;
             RigidBodyMovementType = flags;
             _userRadius = radius;
+            _velocities = new float[100];
+            Wake();
         }
 
         public override void Initalize()
@@ -74,7 +78,12 @@ namespace Project1.Data.Components
                 RigidBody.Init(_entity.Position.WorldMatrix, _userRadius, RigidBodyMovementType == RigidBodyFlags.Static ? 0 : 1);
             else
                 RigidBody.Init(_entity.Position.WorldMatrix, 1, RigidBodyMovementType == RigidBodyFlags.Static ? 0 : 1);
-            Stop();
+        }
+
+        public void Wake()
+        {
+            for(int i = 0; i < _velocities.Length; i++)
+                _velocities[i] = 1;
         }
 
         public void Update(float deltaTime)
@@ -84,6 +93,14 @@ namespace Project1.Data.Components
                 Stop();
                 return;
             }
+
+            _velocities[velocityPos++ % _velocities.Length] = Acceleration.LengthSquared();
+            if (_velocities.Sum() < 0.00001f)
+            {
+                IsSleeping = true;
+                return;
+            }
+            IsSleeping = false;
 
             _prevPosition = RigidBody.WorldMatrix.Translation;
 
@@ -107,8 +124,8 @@ namespace Project1.Data.Components
             else
                 RigidBody.WorldMatrix = newPos;
 
-            LinearVelocity *= (1 - LinearDampening * deltaTime);
-            AngularVelocity *= (1 - AngularDampening * deltaTime);
+            LinearVelocity = LinearVelocity - (LinearVelocity * LinearDampening * deltaTime);
+            AngularVelocity = AngularVelocity - (AngularVelocity * AngularDampening * deltaTime);
 
             float val = LinearVelocity.Length();
             if (val != 0f)
@@ -130,11 +147,15 @@ namespace Project1.Data.Components
         public void AddTorque(Vector3 torque)
         {
             AngularVelocity += Vector3.Transform(torque, RigidBody.InverseInertiaTensor);
+            if (IsSleeping)
+                Wake();
         }
 
         public void AddForce(Vector3 force)
         {
             LinearVelocity += force * RigidBody.InverseMass;
+            if (IsSleeping)
+                Wake();
         }
 
         public void DebugDraw(RenderingSystem render)
@@ -146,6 +167,8 @@ namespace Project1.Data.Components
             DrawingUtils.DrawLine(render, pos.Position, Acceleration, Color.Salmon);
             DrawingUtils.DrawLine(render, pos.Position, LinearVelocity, Color.Orange);
             DrawingUtils.DrawLine(render, pos.Position, AngularVelocity, Color.Pink);
+
+            DrawingUtils.DrawWorldText(render, $"Sleeping: {IsSleeping}\nAngV: {AngularVelocity.Length()}\nLinV: {LinearVelocity.Length()}", pos.Position, Color.Orange);
         }
 
         public void Stop()

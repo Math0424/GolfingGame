@@ -41,23 +41,23 @@ namespace Project1
             //    .AddComponent(new PhysicsComponent(PhysicsBody.Plane, RigidBodyFlags.Static));
 
             Random r = new Random();
-            for (int i = 2; i <= 20; i++)
+            for (int i = 2; i <= 120; i++)
             {
                 PrimitivePhysicsComponent comp = new PrimitivePhysicsComponent(RigidBody.Sphere, RigidBodyFlags.Dynamic);
                 var ent = _world.CreateEntity()
-                    .AddComponent(new PositionComponent((Vector3.Up * 2 * i) + new Vector3((float)r.NextDouble() * 20, 0, (float)r.NextDouble() * 20)))
+                    .AddComponent(new PositionComponent(Vector3.Up * 20 + (Vector3.Up * 2 * i) + new Vector3((float)r.NextDouble() * 10, 0, (float)r.NextDouble() * 10)))
                     .AddComponent(new MeshComponent("models/sphere"))
                     .AddComponent(comp);
                 ent.Position.SetLocalMatrix(Matrix.CreateScale(.8f));
 
-                var ent2 = _world.CreateEntity()
-                    .AddComponent(new PositionComponent(Matrix.CreateRotationX(-MathHelper.PiOver2) * Matrix.CreateTranslation(ent.Position.WorldMatrix.Translation + (Vector3.Down * 2 * i))))
-                    .AddComponent(new MeshComponent("models/sphere"))
-                    .AddComponent(new PrimitivePhysicsComponent(RigidBody.Sphere, RigidBodyFlags.Static));
-                ent2.Position.SetLocalMatrix(Matrix.CreateScale(.8f));
+                //var ent2 = _world.CreateEntity()
+                //    .AddComponent(new PositionComponent(Matrix.CreateRotationX(-MathHelper.PiOver2) * Matrix.CreateTranslation(ent.Position.WorldMatrix.Translation + (Vector3.Down * 2 * i))))
+                //    .AddComponent(new MeshComponent("models/sphere"))
+                //    .AddComponent(new PrimitivePhysicsComponent(RigidBody.Sphere, RigidBodyFlags.Static));
+                //ent2.Position.SetLocalMatrix(Matrix.CreateScale(.8f));
 
                 //comp.LinearVelocity = Vector3.Down * 5;
-                //comp.AngularVelocity = Vector3.One;
+                comp.AngularVelocity = Vector3.Forward * 5;
             }
 
             var plane = _world.CreateEntity()

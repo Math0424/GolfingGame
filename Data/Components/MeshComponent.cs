@@ -28,9 +28,7 @@ namespace Project1.Data.Components
         private static Dictionary<string, ModelInfo> cache = new Dictionary<string, ModelInfo>();
 
         public ref ModelInfo Model => ref _info;
-        public Vector3 ModelCenter => _info.ModelCenter;
         public BoundingBox AABB => _AABB;
-        public OrientatedBoundingBox OBB;
         public string ModelName
         {
             get => _info.Name;
@@ -147,11 +145,10 @@ namespace Project1.Data.Components
         private void CalculateModelInfo(Model model, out ModelInfo info)
         {
             Vector3 min = Vector3.Zero, max = Vector3.Zero;
-            Vector3 center = Vector3.Zero;
             int verticies = 0;
             foreach(var mesh in model.Meshes)
             {
-                foreach(var part in mesh.MeshParts)
+                foreach (var part in mesh.MeshParts)
                     verticies += part.NumVertices;
 
                 int vertexStride = mesh.MeshParts[0].VertexBuffer.VertexDeclaration.VertexStride;
@@ -161,7 +158,6 @@ namespace Project1.Data.Components
                 for (int i = 0; i < vertexData.Length; i += vertexStride / sizeof(float))
                 {
                     Vector3 pos = new Vector3(vertexData[i], vertexData[i + 1], vertexData[i + 2]);
-                    center += pos;
                     min = Vector3.Min(min, pos);
                     max = Vector3.Max(max, pos);
                 }

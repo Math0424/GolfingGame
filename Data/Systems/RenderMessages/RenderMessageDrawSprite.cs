@@ -11,7 +11,7 @@ namespace Project1.Data.Systems.RenderMessages
     {
         public Rectangle Rectangle { get; private set; }
         public string Texture { get; private set; }
-        public RenderMessageDrawSprite(string texture, Rectangle rectangle, float depth) : base(depth, RenderMessageType.DrawSprite | RenderMessageType.Depth)
+        public RenderMessageDrawSprite(string texture, Rectangle rectangle, float depth) : base(depth, RenderMessageType.DrawSprite)
         {
             this.Texture = texture;
             this.Rectangle = rectangle;

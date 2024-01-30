@@ -14,7 +14,7 @@ namespace Project1.Data.Systems.RenderMessages
         public float Scale { get; private set; }
         public Vector2 Pos { get; private set; }
         public Color Color { get; private set; }
-        public RenderMessageDrawText(string font, string text, float scale, float depth, Vector2 pos, Color color) : base(depth, RenderMessageType.DrawText | RenderMessageType.Depth)
+        public RenderMessageDrawText(string font, string text, float scale, float depth, Vector2 pos, Color color) : base(depth, RenderMessageType.DrawText)
         {
             this.Font = font;
             this.Text = text;

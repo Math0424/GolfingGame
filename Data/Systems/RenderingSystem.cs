@@ -14,12 +14,12 @@ namespace Project1.Data.Systems
 {
     internal class RenderingSystem : SystemComponent, IDrawUpdate
     {
+        public Camera Camera { get; private set; }
         public Action DoDraw;
 
         private GraphicsDeviceManager _graphics;
         private GraphicsDevice _graphicsDevice;
         private BasicEffect _basicEffect;
-        private Camera _camera;
         private SpriteFont _font;
         private SpriteBatch _debugSpriteBatch;
         private SpriteBatch _spriteBatch;
@@ -36,7 +36,7 @@ namespace Project1.Data.Systems
         public RenderingSystem(World world, Game game, Camera camera)
         {
             _game = game;
-            _camera = camera;
+            Camera = camera;
             _world = world;
             _graphics = new GraphicsDeviceManager(game);
             world.AddInjectedType(_graphics);
@@ -73,7 +73,8 @@ namespace Project1.Data.Systems
             _spriteEffect = new SpriteEffect(_graphicsDevice);
 
             _font = _world.Game.Content.Load<SpriteFont>("Fonts/Debug");
-            _camera.SetupProjection(_graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height, 90);
+            EnqueueMessage(new RenderMessageLoadFont("Fonts/Debug"));
+            Camera.SetupProjection(_graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height, 90);
             //_camera.SetupOrthographic(_graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height);
         }
 
@@ -90,12 +91,14 @@ namespace Project1.Data.Systems
             int rendering = 0;
             // TODO : some sort of spatial partitioning
             // oct-tree or dynamic sectors
+
+            var camera = Camera;
             foreach (var x in drawables)
             {
-                if (x.Visible && x.IsVisible(ref _camera))
+                if (x.Visible && x.IsVisible(ref camera))
                 {
                     rendering++;
-                    x.Draw(this, ref _camera);
+                    x.Draw(this, ref camera);
                 }
             }
 
@@ -126,7 +129,7 @@ namespace Project1.Data.Systems
                     $"DrawCalls: {renderMessageCount} / {_graphicsDevice.Metrics.DrawCount}\n" +
                     $"Triangles: {_graphicsDevice.Metrics.PrimitiveCount}\n" +
                     $"Textures: {_graphicsDevice.Metrics.TextureCount}\n" +
-                    $"Pos: [{Math.Round(_camera.Translation.X, 2)}, {Math.Round(_camera.Translation.Y, 2)}, {Math.Round(_camera.Translation.Z, 2)}]",
+                    $"Pos: [{Math.Round(Camera.Translation.X, 2)}, {Math.Round(Camera.Translation.Y, 2)}, {Math.Round(Camera.Translation.Z, 2)}]",
                     new Vector2(0, 0), Color.Yellow);
 
                 _basicEffect.AmbientLightColor = prevAmbientColor;
@@ -152,8 +155,8 @@ namespace Project1.Data.Systems
         private void ProcessRenderMessages()
         {
             _basicEffect.World = Matrix.Identity;
-            _basicEffect.View = _camera.ViewMatrix;
-            _basicEffect.Projection = _camera.ProjectionMatrix;
+            _basicEffect.View = Camera.ViewMatrix;
+            _basicEffect.Projection = Camera.ProjectionMatrix;
             _basicEffect.TextureEnabled = true;
             _basicEffect.VertexColorEnabled = false;
 
@@ -184,7 +187,7 @@ namespace Project1.Data.Systems
                         var drawMesh = (RenderMessageDrawMesh)message;
                         _basicEffect.VertexColorEnabled = false;
                         _basicEffect.TextureEnabled = true;
-                        _meshes[drawMesh.Model].Draw(drawMesh.Matrix, _camera.ViewMatrix, _camera.ProjectionMatrix);
+                        _meshes[drawMesh.Model].Draw(drawMesh.Matrix, Camera.ViewMatrix, Camera.ProjectionMatrix);
                         break;
                     case RenderMessageType.DrawLine:
                         var drawLine = (RenderMessageDrawLine)message;
@@ -207,17 +210,17 @@ namespace Project1.Data.Systems
                             _graphicsDevice.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, _quadVertexPositionTexture, 0, 4, _quadVertexIndices, 0, 4);
                         else
                             _graphicsDevice.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, _quadVertexPositionTexture, 0, 4, _quadVertexIndicesNoBack, 0, 2);
-                        _basicEffect.View = _camera.ViewMatrix;
+                        _basicEffect.View = Camera.ViewMatrix;
                         break;
                 }
             }
 
-            RenderMessage[] depthSpriteBatch = _renderMessages.Where(e => e.Type == RenderMessageType.Depth).OrderBy(e => -((RenderMessageDepth)e).Depth).ToArray();
+            RenderMessage[] depthSpriteBatch = _renderMessages.Where(e => e.Type == RenderMessageType.DrawSprite || e.Type == RenderMessageType.DrawText).OrderBy(e => -((RenderMessageDepth)e).Depth).ToArray();
             _spriteEffect.CurrentTechnique.Passes[0].Apply();
             _spriteBatch.Begin();
             foreach (var sprite in depthSpriteBatch)
             {
-                switch(sprite.Type & ~RenderMessageType.Depth)
+                switch(sprite.Type)
                 {
                     case RenderMessageType.DrawSprite:
                         var drawSprite = (RenderMessageDrawSprite)sprite;

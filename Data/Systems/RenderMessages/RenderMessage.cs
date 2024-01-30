@@ -7,19 +7,19 @@ using System.Threading.Tasks;
 
 namespace Project1.Data.Systems.RenderMessages
 {
-    [Flags]
     enum RenderMessageType
     {
-        Depth,
+        None,
 
         LoadMesh,
         LoadFont,
         LoadTexture,
 
-        DrawMesh,
-        DrawLine,
         DrawSprite,
         DrawText,
+
+        DrawMesh,
+        DrawLine,
         DrawQuad,
     }
 

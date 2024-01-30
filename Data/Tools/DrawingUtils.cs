@@ -25,6 +25,11 @@ namespace Project1.Data
             DrawLine(render, matrix.Translation, Vector3.Normalize(matrix.Forward), Color.Blue);
         }
 
+        public static void DrawWorldText(RenderingSystem graphics, string text, Vector3 worldPos, Color color)
+        {
+            Vector3 screen = graphics.Camera.WorldToScreen(ref worldPos);
+            graphics.EnqueueMessage(new RenderMessageDrawText("Fonts/Debug", text, 12, 1 / screen.Z, new Vector2(screen.X, screen.Y), color));
+        }
 
     }
 }
