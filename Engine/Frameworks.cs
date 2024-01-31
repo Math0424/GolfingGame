@@ -22,7 +22,7 @@ namespace Project1.Engine
     internal abstract class SystemComponent
     {
         public SystemComponent() { }
-        public abstract void Update(GameTime delta);
+        public virtual void Update(GameTime delta) { }
         public virtual void Close() {}
     }
 }

@@ -26,7 +26,6 @@ namespace Project1.Engine.Systems
         private SpriteBatch _spriteBatch;
         private SpriteEffect _spriteEffect;
 
-
         private GameTime tickTime;
         private bool _debugMode;
         private World _world;
@@ -89,19 +88,20 @@ namespace Project1.Engine.Systems
 
             DoDraw?.Invoke();
 
-            var drawables = _world.GetEntityComponents<RenderableComponent>();
-
             int rendering = 0;
-            // TODO : some sort of spatial partitioning
-            // oct-tree or dynamic sectors
-
-            var camera = Camera;
-            foreach (var x in drawables)
+            var drawables = _world.GetEntityComponents<RenderableComponent>();
+            if (drawables != null)
             {
-                if (x.Visible && x.IsVisible(ref camera))
+                // TODO : some sort of spatial partitioning
+                // oct-tree or dynamic sectors
+                var camera = Camera;
+                foreach (var x in drawables)
                 {
-                    rendering++;
-                    x.Draw(this, ref camera);
+                    if (x.Visible && x.IsVisible(ref camera))
+                    {
+                        rendering++;
+                        x.Draw(this, ref camera);
+                    }
                 }
             }
 
@@ -128,7 +128,7 @@ namespace Project1.Engine.Systems
                     $"FPS: {Math.Round(delta.ElapsedGameTime.TotalSeconds * 1000, 2)}ms {Math.Round((ticksTaken / delta.ElapsedGameTime.TotalMilliseconds) * 100)}%\n" +
                     $"TPS: {Math.Round(tickTime.ElapsedGameTime.TotalSeconds * 1000, 2)}ms\n" +
                     $"Entities: {_world.EntityCount}\n" +
-                    $"Drawn: {rendering}/{drawables.Count()}\n" +
+                    $"Drawn: {rendering}/{drawables?.Count() ?? -1}\n" +
                     $"DrawCalls: {renderMessageCount} / {_graphicsDevice.Metrics.DrawCount}\n" +
                     $"Triangles: {_graphicsDevice.Metrics.PrimitiveCount}\n" +
                     $"Textures: {_graphicsDevice.Metrics.TextureCount}\n" +
@@ -139,7 +139,6 @@ namespace Project1.Engine.Systems
                 _debugSpriteBatch.End();
             }
         }
-
 
         private Dictionary<string, Model> _meshes;
         private Dictionary<string, Texture2D> _textures;
@@ -154,6 +153,20 @@ namespace Project1.Engine.Systems
         };
         private static short[] _quadVertexIndicesNoBack = new short[] { 0, 1, 2, 2, 3, 0 };
         private static short[] _quadVertexIndices = new short[] { 0, 1, 2, 2, 3, 0, 0, 3, 2, 2, 1, 0 };
+
+        private static VertexPosition[] _boxVertexPosition = new[]
+        {
+            new VertexPosition(new Vector3(-1, 1, 1)),
+            new VertexPosition(new Vector3(1, 1, 1)),
+            new VertexPosition(new Vector3(1, -1, 1)),
+            new VertexPosition(new Vector3(-1, -1, 1)),
+
+            new VertexPosition(new Vector3(-1, 1, -1)),
+            new VertexPosition(new Vector3(1, 1, -1)),
+            new VertexPosition(new Vector3(1, -1, -1)),
+            new VertexPosition(new Vector3(-1, -1, -1)),
+        };
+        private static short[] _boxVertexIndices = new short[] { 0,1, 1,2, 2,3, 3,0,  4,5, 5,6, 6,7, 7,4,  0,4, 1,5, 2,6, 3,7 };
 
         private void ProcessRenderMessages()
         {
@@ -196,6 +209,7 @@ namespace Project1.Engine.Systems
                         var drawLine = (RenderMessageDrawLine)message;
                         _basicEffect.VertexColorEnabled = true;
                         _basicEffect.TextureEnabled = false;
+                        _basicEffect.World = Matrix.Identity;
                         _basicEffect.CurrentTechnique.Passes[0].Apply();
                         var coloredLineVertices = new[] {
                             new VertexPositionColor(drawLine.Pos1, drawLine.Color), new VertexPositionColor(drawLine.Pos2, drawLine.Color),
@@ -214,6 +228,14 @@ namespace Project1.Engine.Systems
                         else
                             _graphicsDevice.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, _quadVertexPositionTexture, 0, 4, _quadVertexIndicesNoBack, 0, 2);
                         _basicEffect.View = Camera.ViewMatrix;
+                        break;
+                    case RenderMessageType.DrawBox:
+                        var drawBox = (RenderMessageDrawBox)message;
+                        _basicEffect.VertexColorEnabled = true;
+                        _basicEffect.TextureEnabled = false;
+                        _basicEffect.World = drawBox.Matrix;
+                        _basicEffect.CurrentTechnique.Passes[0].Apply();
+                        _graphicsDevice.DrawUserIndexedPrimitives(PrimitiveType.LineList, _boxVertexPosition, 0, 8, _boxVertexIndices, 0, 12);
                         break;
                 }
             }

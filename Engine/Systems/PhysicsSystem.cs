@@ -69,12 +69,12 @@ namespace Project1.Engine.Systems
                 // naive approach - use trees in the future
                 foreach (var target in physicsObjects)
                 {
-                    if (target.RigidBodyMovementType == RigidBodyFlags.Static || target.RigidBodyMovementType == RigidBodyFlags.Kinematic || target.IsSleeping)
+                    if (target.RigidBody.RigidBodyFlags == RigidBodyFlags.Static || target.RigidBody.RigidBodyFlags == RigidBodyFlags.Kinematic || target.IsSleeping)
                         continue;
                     
                     foreach (var contact in physicsObjects)
                     {
-                        if (target != contact && Vector3.Distance(target.RigidBody.WorldMatrix.Translation, contact.RigidBody.WorldMatrix.Translation) <= target.RigidBody.BoundingSphere + contact.RigidBody.BoundingSphere)
+                        if (target != contact)// && Vector3.Distance(target.RigidBody.WorldMatrix.Translation, contact.RigidBody.WorldMatrix.Translation) <= target.RigidBody.BoundingSphere + contact.RigidBody.BoundingSphere)
                         {
                             Collision col;
                             CollisionSolver.Solve(target, contact, out col);
@@ -84,9 +84,9 @@ namespace Project1.Engine.Systems
                                 Vector3 rt = col.TargetRelative;
 
                                 // _render.EnqueueMessage(new RenderMessageDrawLine(Vector3.Zero, col.PositionWorld, Color.Pink));
-                                // _render.EnqueueMessage(new RenderMessageDrawLine(Vector3.Zero, rc, Color.Red)); // up
-                                // //_render.EnqueueMessage(new RenderMessageDrawLine(Vector3.Zero, rt, Color.Green)); //down
-                                // _render.EnqueueMessage(new RenderMessageDrawLine(Vector3.Zero, col.Normal, Color.Orange)); //up
+                                // //_render.EnqueueMessage(new RenderMessageDrawLine(Vector3.Zero, col.Normal, Color.Orange));
+                                // _render.EnqueueMessage(new RenderMessageDrawLine(contact.RigidBody.WorldMatrix.Translation, contact.RigidBody.WorldMatrix.Translation + rc, Color.Red)); // up
+                                // _render.EnqueueMessage(new RenderMessageDrawLine(target.RigidBody.WorldMatrix.Translation, target.RigidBody.WorldMatrix.Translation + rt, Color.Green)); //down
 
                                 // target sphere
                                 // contant plane
@@ -105,19 +105,34 @@ namespace Project1.Engine.Systems
                                 Matrix invc = contact.RigidBody.InverseInertiaTensor;
                                 Matrix invt = target.RigidBody.InverseInertiaTensor;
 
-                                Vector3 angularVelChangec = Vector3.Cross(rc, col.Normal);
-                                angularVelChangec = Vector3.Transform(angularVelChangec, invc);
-                                Vector3 vRc = Vector3.Cross(angularVelChangec, rc);
-                                float denominator = contact.RigidBody.InverseMass + Vector3.Dot(vRc, col.Normal);
-
                                 Vector3 angularVelChanget = Vector3.Cross(rt, col.Normal);
                                 angularVelChanget = Vector3.Transform(angularVelChanget, invt);
                                 Vector3 vRt = Vector3.Cross(angularVelChanget, rt);
-                                denominator += target.RigidBody.InverseMass + Vector3.Dot(vRt, col.Normal);
+                                float denominator = target.RigidBody.InverseMass + Vector3.Dot(vRt, col.Normal);
+
+                                target.AddTorque(angularVelChanget);
+
+                                if (contact.RigidBody.RigidBodyFlags == RigidBodyFlags.Dynamic)
+                                {
+                                    Vector3 angularVelChangec = Vector3.Cross(rc, col.Normal);
+                                    angularVelChangec = Vector3.Transform(angularVelChangec, invc);
+                                    Vector3 vRc = Vector3.Cross(angularVelChangec, rc);
+                                    denominator += contact.RigidBody.InverseMass + Vector3.Dot(vRc, col.Normal);
+
+                                    contact.AddTorque(angularVelChangec);
+                                }
 
                                 float Jmod = -(1 + e) * contactMag / denominator;
+                                Vector3 J = col.Normal * Jmod;
+
+                                contact.AddForce(J);
+                                target.AddForce(-J);
 
                                 // Friction code
+                                
+                                velDueToRotContact = Vector3.Cross(contact.AngularVelocity, rc);
+                                velDueToRotTarget = Vector3.Cross(target.AngularVelocity, rt);
+                                relativeVel = (contact.LinearVelocity + velDueToRotContact) - (target.LinearVelocity + velDueToRotTarget);
 
                                 Vector3 tangent = relativeVel - Vector3.Dot(relativeVel, col.Normal) * col.Normal;
                                 if (tangent.LengthSquared() > 0.1f)
@@ -152,13 +167,6 @@ namespace Project1.Engine.Systems
                                 }
 
                                 // End Friction code
-
-                                Vector3 J = col.Normal * Jmod;
-                                contact.AddForce(J);
-                                target.AddForce(-J);
-
-                                contact.AddTorque(angularVelChangec);
-                                target.AddTorque(angularVelChanget);
                             }
                         }
                     }

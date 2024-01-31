@@ -18,6 +18,7 @@ namespace Project1.MyGame
         private Camera _cam;
         private World _world;
         private RenderingSystem _render;
+        private float _strokes;
         private Game _game;
 
         public GolfingSystem(Game game, World world, RenderingSystem render, Camera camera)
@@ -26,8 +27,15 @@ namespace Project1.MyGame
             _game = game;
             _cam = camera;
             _world = world;
-            _cam.SetWorldMatrix(Matrix.CreateRotationX(-MathHelper.PiOver4));
-            _cam.SetupOrthographic(render.ScreenBounds.X / 10f, render.ScreenBounds.Y / 10f, -50f, 50f);
+            _cam.SetWorldMatrix(Matrix.CreateRotationX(-MathHelper.PiOver2));
+
+            float aspectRatio = (float)render.ScreenBounds.X / render.ScreenBounds.Y;
+            _cam.SetupOrthographic(aspectRatio * 15, 15, -1.5f, 50f);
+        }
+
+        public void Reset()
+        {
+            _strokes = 0;
         }
 
         public void SetPlayer(Entity ent)
@@ -45,26 +53,30 @@ namespace Project1.MyGame
                 matrix.Translation = _player.Position.Position;
                 _cam.SetWorldMatrix(matrix);
 
-                if (Input.IsNewMouseDown(Input.MouseButtons.LeftButton))
-                    _mouseDragStart = Input.MousePosition();
-
-                if (Input.IsNewMouseUp(Input.MouseButtons.LeftButton))
+                var physics = _player.GetComponent<PrimitivePhysicsComponent>();
+                if (physics.IsSleeping)
                 {
-                    Vector2 deltaMouse = Input.MousePosition() - _mouseDragStart;
-                    var physics = _player.GetComponent<PrimitivePhysicsComponent>();
-                    Vector3 val = -new Vector3(deltaMouse.X, 0, deltaMouse.Y) / 10;
-                    physics.AddForce(val);
+                    if (Input.IsNewMouseDown(Input.MouseButtons.LeftButton))
+                        _mouseDragStart = Input.MousePosition();
+
+                    if (Input.IsNewMouseUp(Input.MouseButtons.LeftButton))
+                    {
+                        Vector2 deltaMouse = Input.MousePosition() - _mouseDragStart;
+                        Vector3 val = -new Vector3(deltaMouse.X, 0, deltaMouse.Y) / 10;
+                        physics.AddForce(val);
+                        _strokes++;
+                    }
+
+                    if (Input.IsMouseDown(Input.MouseButtons.LeftButton))
+                    {
+                        _game.IsMouseVisible = false;
+                        Vector2 deltaMouse = Input.MousePosition() - _mouseDragStart;
+                        Vector3 val = new Vector3(deltaMouse.X, 0, deltaMouse.Y);
+                        _render.EnqueueMessage(new RenderMessageDrawLine(_player.Position.Position, _player.Position.Position + val / 10, Color.Red));
+                    }
+                    else
+                        _game.IsMouseVisible = true;
                 }
-
-                if (Input.IsMouseDown(Input.MouseButtons.LeftButton))
-                {
-                    _game.IsMouseVisible = false;
-                    Vector2 deltaMouse = Input.MousePosition() - _mouseDragStart;
-                    Vector3 val = new Vector3(deltaMouse.X, 0, deltaMouse.Y);
-                    _render.EnqueueMessage(new RenderMessageDrawLine(_player.Position.Position, _player.Position.Position + val / 10, Color.Red));
-                } 
-                else
-                    _game.IsMouseVisible = true;
             }
         }
     }

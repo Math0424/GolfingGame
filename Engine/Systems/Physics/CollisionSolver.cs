@@ -39,9 +39,61 @@ namespace Project1.Engine.Systems.Physics
                         case RigidBodyType.Plane:
                             SolvePlaneAndSphere((RigidBodySphere)target.RigidBody, (RigidBodyPlane)contact.RigidBody, out collision);
                             break;
+                        case RigidBodyType.Box:
+                            SolveBoxAndSphere((RigidBodySphere)target.RigidBody, (RigidBodyBox)contact.RigidBody, out collision);
+                            break;
                     }
                     break;
             }
+        }
+
+
+        public static void SolveBoxAndSphere(RigidBodySphere target, RigidBodyBox contact, out Collision collision)
+        {
+            collision = default;
+            Vector3 rsc = Vector3.Transform(target.WorldMatrix.Translation, Matrix.Invert(contact.WorldMatrix));
+            Vector3 halfExtents = contact.HalfExtents;
+
+            if (Math.Abs(rsc.X) - target.Radius > halfExtents.X ||
+                Math.Abs(rsc.Y) - target.Radius > halfExtents.Y ||
+                Math.Abs(rsc.Z) - target.Radius > halfExtents.Z)
+            {
+                return;
+            }
+
+            Vector3 cp = default;
+            
+            float dist = rsc.X;
+            if (dist > halfExtents.X) dist = halfExtents.X;
+            if (dist < -halfExtents.X) dist = -halfExtents.X;
+            cp.X = dist;
+
+            dist = rsc.Y;
+            if (dist > halfExtents.Y) dist = halfExtents.Y;
+            if (dist < -halfExtents.Y) dist = -halfExtents.Y;
+            cp.Y = dist;
+
+            dist = rsc.Z;
+            if (dist > halfExtents.Z) dist = halfExtents.Z;
+            if (dist < -halfExtents.Z) dist = -halfExtents.Z;
+            cp.Z = dist;
+
+            dist = (cp - rsc).LengthSquared();
+            if (dist > target.Radius * target.Radius) return;
+
+            Vector3 cpW = Vector3.Transform(cp, contact.WorldMatrix);
+
+            if (dist != 0)
+                collision.Normal = Vector3.Normalize(target.WorldMatrix.Translation - cpW);
+            else
+                collision.Normal = Vector3.Up;
+
+            collision.ContactRelative = cpW - contact.WorldMatrix.Translation;
+            collision.TargetRelative = -collision.Normal * target.Radius;
+
+            collision.PositionWorld = cpW;
+            collision.Penetration = target.Radius - (float)Math.Sqrt(dist);
+            collision.Containment = ContainmentType.Intersects;
         }
 
         public static void SolvePlaneAndSphere(RigidBodySphere target, RigidBodyPlane contact, out Collision collision)

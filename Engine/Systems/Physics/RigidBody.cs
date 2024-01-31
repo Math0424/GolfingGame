@@ -22,12 +22,13 @@ namespace Project1.Engine.Systems.Physics
     internal abstract class RigidBody
     {
         public static RigidBody Sphere => new RigidBodySphere();
-        //public static readonly PhysicsBody Capsule = new SpherePhysics();
-        //public static readonly PhysicsBody Cylinder = new SpherePhysics();
-        //public static readonly PhysicsBody Box = new SpherePhysics();
-
+        public static RigidBody Box => new RigidBodyBox();
         public static RigidBody Plane => new RigidBodyPlane();
 
+        //public static readonly PhysicsBody Capsule = new SpherePhysics();
+        //public static readonly PhysicsBody Cylinder = new SpherePhysics();
+
+        public RigidBodyFlags RigidBodyFlags { get; protected set; }
         public RigidBodyType RigidBodyType { get; protected set; }
         public Matrix WorldMatrix;
 
@@ -37,24 +38,32 @@ namespace Project1.Engine.Systems.Physics
         public Matrix InverseInertiaTensor { get; protected set; }
         public float BoundingSphere { get; protected set; }
 
-        public virtual void Init(Matrix worldMatrix, float radius, float mass)
+        public virtual void Init(Matrix worldMatrix, RigidBodyFlags flags, float radius, float mass)
         {
-            WorldMatrix = worldMatrix;
-            Mass = mass;
-            InverseMass = mass == 0 ? 0 : 1 / Mass;
-            BoundingSphere = radius;
-
-            if (Mass >= 0.001f)
-                UpdateTensorInternal();
-            else
+            RigidBodyFlags = flags;
+            if (flags == RigidBodyFlags.Static)
             {
+                Mass = 0;
+                InverseMass = 0;
                 InertiaTensor = Matrix.Identity;
                 InverseInertiaTensor = InertiaTensor;
+            } 
+            else
+            {
+                Mass = mass;
+                InverseMass = mass == 0 ? 0 : 1 / Mass;
+                UpdateTensorInternal();
             }
+
+            WorldMatrix = worldMatrix;
+            BoundingSphere = radius;
         }
         protected abstract void UpdateTensorInternal();
     }
 
+    /// <summary>
+    /// Zero mass, no rotation plane
+    /// </summary>
     internal class RigidBodyPlane : RigidBody
     {
         public RigidBodyPlane()
@@ -74,6 +83,44 @@ namespace Project1.Engine.Systems.Physics
         }
     }
 
+    /// <summary>
+    /// Zero mass, no rotation box
+    /// </summary>
+    internal class RigidBodyBox : RigidBody
+    {
+        public RigidBodyBox()
+        {
+            RigidBodyType = RigidBodyType.Box;
+        }
+
+        public Vector3 HalfExtents;
+
+        public override void Init(Matrix worldMatrix, RigidBodyFlags flags, float radius, float mass)
+        {
+            HalfExtents = new Vector3(worldMatrix.Forward.Length(), worldMatrix.Up.Length(), worldMatrix.Right.Length());
+            worldMatrix.Forward /= worldMatrix.Forward.Length();
+            worldMatrix.Up /= worldMatrix.Up.Length();
+            worldMatrix.Right /= worldMatrix.Right.Length();
+            base.Init(worldMatrix, flags, radius, mass);
+        }
+
+        protected override void UpdateTensorInternal()
+        {
+            BoundingSphere = HalfExtents.LengthSquared();
+            Vector3 length = HalfExtents * 2;
+            float x = 0.083f * Mass * (length.Y * length.Y + length.Z * length.Z);
+            float y = 0.083f * Mass * (length.Z * length.Z + length.X * length.X);
+            float z = 0.083f * Mass * (length.Y * length.Y + length.X * length.X);
+            InertiaTensor = new Matrix(
+                new Vector4(x, 0, 0, 0),
+                new Vector4(0, y, 0, 0),
+                new Vector4(0, 0, z, 0),
+                new Vector4(0, 0, 0, 1)
+            );
+            InverseInertiaTensor = Matrix.Invert(InertiaTensor);
+        }
+    }
+
     internal class RigidBodySphere : RigidBody
     {
         public float Radius;
@@ -83,10 +130,13 @@ namespace Project1.Engine.Systems.Physics
             RigidBodyType = RigidBodyType.Sphere;
         }
 
-        public override void Init(Matrix worldMatrix, float radius, float mass)
+        public override void Init(Matrix worldMatrix, RigidBodyFlags flags, float radius, float mass)
         {
             Radius = radius;
-            base.Init(worldMatrix, radius, mass);
+            worldMatrix.Forward /= worldMatrix.Forward.Length();
+            worldMatrix.Up /= worldMatrix.Up.Length();
+            worldMatrix.Right /= worldMatrix.Right.Length();
+            base.Init(worldMatrix, flags, radius, mass);
         }
 
         protected override void UpdateTensorInternal()
@@ -101,4 +151,5 @@ namespace Project1.Engine.Systems.Physics
             InverseInertiaTensor = Matrix.Invert(InertiaTensor);
         }
     }
+
 }

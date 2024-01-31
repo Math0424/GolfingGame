@@ -9,6 +9,7 @@ using Project1.Engine.Systems.Physics;
 using Project1.MyGame;
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Project1
 {
@@ -19,7 +20,7 @@ namespace Project1
         public GolfGame()
         {
             Content.RootDirectory = "Content";
-            IsMouseVisible = true;
+            IsMouseVisible = false;
 
             _world = new World(this, "Level1")
                 .AddSystem<Camera>()
@@ -30,52 +31,26 @@ namespace Project1
 
         protected override void LoadContent()
         {
-            var player = _world.CreateEntity()
-                .AddComponent(new PositionComponent(Vector3.Up * 20))
-                .AddComponent(new MeshComponent("models/sphere"))
-                .AddComponent(new PrimitivePhysicsComponent(RigidBody.Sphere, RigidBodyFlags.Dynamic))
-                .AddComponent(new GolfBallComponent());
-            player.Position.SetLocalMatrix(Matrix.CreateScale(.75f));
-
-            _world.AddSystem<GolfingSystem>();
-            _world.GetSystem<GolfingSystem>().SetPlayer(player);
-
-            //_world.CreateEntity()
-            //    .AddComponent(new PositionComponent(Matrix.CreateRotationX(MathHelper.PiOver2) * Matrix.CreateScale(100)))
-            //    .AddComponent(new BillboardComponent("textures/shrimp", BillboardOption.EntityFacing))
-            //    .AddComponent(new PhysicsComponent(PhysicsBody.Plane, RigidBodyFlags.Static));
-
-            Random r = new Random();
-            for (int i = 2; i <= 120; i++)
-            {
-                PrimitivePhysicsComponent comp = new PrimitivePhysicsComponent(RigidBody.Sphere, RigidBodyFlags.Dynamic);
-                var ent = _world.CreateEntity()
-                    .AddComponent(new PositionComponent(Vector3.Up * 20 + (Vector3.Up * 2 * i) + new Vector3((float)r.NextDouble() * 10, 0, (float)r.NextDouble() * 10)))
+            var ent = _world.CreateEntity()
+                    .AddComponent(new PositionComponent())
                     .AddComponent(new MeshComponent("models/sphere"))
-                    .AddComponent(comp);
-                ent.Position.SetLocalMatrix(Matrix.CreateScale(.75f));
+                    .AddComponent(new PrimitivePhysicsComponent(RigidBody.Sphere, RigidBodyFlags.Dynamic, .5f));
+            ent.Position.SetLocalMatrix(Matrix.CreateScale(.45f));
+            ent.GetComponent<PrimitivePhysicsComponent>().AngularDampening = .6f;
 
-                //var ent2 = _world.CreateEntity()
-                //    .AddComponent(new PositionComponent(Matrix.CreateRotationX(-MathHelper.PiOver2) * Matrix.CreateTranslation(ent.Position.WorldMatrix.Translation + (Vector3.Down * 2 * i))))
-                //    .AddComponent(new MeshComponent("models/sphere"))
-                //    .AddComponent(new PrimitivePhysicsComponent(RigidBody.Sphere, RigidBodyFlags.Static));
-                //ent2.Position.SetLocalMatrix(Matrix.CreateScale(.8f));
+            _world.AddSystem<WorldLoadingSystem>();
+            string file = Path.Combine(Content.RootDirectory, "worlds", "world1.txt");
+            var worldLoader = _world.GetSystem<WorldLoadingSystem>();
+            _world.GetSystem<WorldLoadingSystem>().LoadWorld(file);
+            ent.Position.SetWorldMatrix(Matrix.CreateTranslation(worldLoader.PlayerLocation));
 
-                //comp.LinearVelocity = Vector3.Down * 5;
-                comp.AngularVelocity = Vector3.Forward * 5;
-            }
+#if false
+            _world.AddSystem<GolfingSystem>();
+            _world.GetSystem<GolfingSystem>().SetPlayer(ent);
+#else
+            _world.AddSystem<SpectatorMovement>();
+#endif
 
-            //var plane = _world.CreateEntity()
-            //        .AddComponent(new PositionComponent(Matrix.CreateRotationX(-MathHelper.PiOver2 + 0.25f)))
-            //        .AddComponent(new BillboardComponent("textures/shrimp", BillboardOption.EntityFacing))
-            //        .AddComponent(new PrimitivePhysicsComponent(RigidBody.Plane, RigidBodyFlags.Static, 100));
-            //plane.Position.SetLocalMatrix(Matrix.CreateScale(100f));
-
-            var plane = _world.CreateEntity()
-                    .AddComponent(new PositionComponent(Matrix.CreateRotationX(-MathHelper.PiOver2)))
-                    .AddComponent(new BillboardComponent("textures/shrimp", BillboardOption.EntityFacing))
-                    .AddComponent(new PrimitivePhysicsComponent(RigidBody.Plane, RigidBodyFlags.Static, 100));
-            plane.Position.SetLocalMatrix(Matrix.CreateScale(100f));
         }
 
         protected override void Update(GameTime gameTime)

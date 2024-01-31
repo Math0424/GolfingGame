@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Project1.Engine.Systems.Physics;
 using Project1.Engine.Systems;
+using Project1.Engine.Systems.RenderMessages;
 
 namespace Project1.Engine.Components
 {
@@ -21,9 +22,7 @@ namespace Project1.Engine.Components
 
     internal class PrimitivePhysicsComponent : EntityComponent
     {
-        public RigidBodyFlags RigidBodyMovementType { get; private set; }
-
-        public Vector3 Acceleration { get; private set; }
+        public Vector3 _deltaPos;
         private Vector3 _prevPosition;
 
         public Vector3 AngularVelocity;
@@ -43,6 +42,7 @@ namespace Project1.Engine.Components
         public float DynamicFriction;
 
         private float _userRadius;
+        private RigidBodyFlags _userFlags;
 
         private float[] _velocities;
         private int velocityPos;
@@ -64,9 +64,9 @@ namespace Project1.Engine.Components
             AngularDampening = 0.5f;
             Restitution = .5f;
             Gravity = Vector3.Down * 9.8f;
-            StaticFriction = 0.4f;
-            DynamicFriction = 0.2f;
-            RigidBodyMovementType = flags;
+            StaticFriction = 0.8f;
+            DynamicFriction = 0.4f;
+            _userFlags = flags;
             _userRadius = radius;
             _velocities = new float[100];
             Wake();
@@ -75,9 +75,9 @@ namespace Project1.Engine.Components
         public override void Initalize()
         {
             if (_userRadius != -1)
-                RigidBody.Init(_entity.Position.WorldMatrix, _userRadius, RigidBodyMovementType == RigidBodyFlags.Static ? 0 : 1);
+                RigidBody.Init(_entity.Position.WorldMatrix, _userFlags, _userRadius, 1);
             else
-                RigidBody.Init(_entity.Position.WorldMatrix, 1, RigidBodyMovementType == RigidBodyFlags.Static ? 0 : 1);
+                RigidBody.Init(_entity.Position.WorldMatrix, _userFlags, 1, 1);
         }
 
         public void Wake()
@@ -88,20 +88,22 @@ namespace Project1.Engine.Components
 
         public void Update(float deltaTime)
         {
-            if (RigidBodyMovementType == RigidBodyFlags.Static)
+            if (RigidBody.RigidBodyFlags == RigidBodyFlags.Static)
             {
                 Stop();
                 return;
             }
 
-            _velocities[velocityPos++ % _velocities.Length] = Acceleration.LengthSquared();
+            _velocities[velocityPos++ % _velocities.Length] = _deltaPos.LengthSquared();
             if (_velocities.Sum() < 0.00001f)
             {
                 IsSleeping = true;
+                Stop();
                 return;
             }
             IsSleeping = false;
 
+            _deltaPos = _prevPosition - RigidBody.WorldMatrix.Translation;
             _prevPosition = RigidBody.WorldMatrix.Translation;
 
             LinearVelocity += Gravity * deltaTime;
@@ -131,7 +133,6 @@ namespace Project1.Engine.Components
             if (val != 0f)
                 LinearVelocity = Vector3.Normalize(LinearVelocity) * Math.Min(val, 20f);
 
-            Acceleration = _prevPosition - RigidBody.WorldMatrix.Translation;
         }
 
         public void UpdateWorldMatrix()
@@ -164,12 +165,19 @@ namespace Project1.Engine.Components
 
             DrawingUtils.DrawMatrix(render, pos.WorldMatrix);
 
-            DrawingUtils.DrawLine(render, pos.Position, Acceleration, Color.Salmon);
-            DrawingUtils.DrawLine(render, pos.Position, LinearVelocity, Color.Orange);
-            DrawingUtils.DrawLine(render, pos.Position, AngularVelocity, Color.Pink);
-
-            if (RigidBodyMovementType != RigidBodyFlags.Static)
+            switch(RigidBody.RigidBodyType)
             {
+                case RigidBodyType.Box:
+                    Matrix mat = Matrix.CreateScale(((RigidBodyBox)RigidBody).HalfExtents);
+                    mat = mat * RigidBody.WorldMatrix;
+                    render.EnqueueMessage(new RenderMessageDrawBox(mat));
+                    break;
+            }
+
+            if (RigidBody.RigidBodyFlags != RigidBodyFlags.Static)
+            {
+                DrawingUtils.DrawLine(render, pos.Position, LinearVelocity, Color.Orange);
+                DrawingUtils.DrawLine(render, pos.Position, AngularVelocity, Color.Pink);
                 DrawingUtils.DrawWorldText(render, $"AngV: {Math.Round(AngularVelocity.Length(), 2)}\nLinV: {Math.Round(LinearVelocity.Length(), 2)}", pos.Position, IsSleeping ? Color.Blue : Color.Orange);
             }
         }

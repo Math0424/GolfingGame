@@ -30,6 +30,12 @@ namespace Project1.Engine.Components
 
         public Action UpdatedTransforms;
 
+        public PositionComponent(Matrix worldMatrix, Matrix localMatrix) : this()
+        {
+            SetWorldMatrix(worldMatrix);
+            SetLocalMatrix(localMatrix);
+        }
+
         public PositionComponent(Matrix worldMatrix) : this()
         {
             SetWorldMatrix(worldMatrix);

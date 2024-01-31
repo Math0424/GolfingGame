@@ -27,6 +27,9 @@ namespace Project1.Engine
 
         public static void DrawWorldText(RenderingSystem graphics, string text, Vector3 worldPos, Color color)
         {
+            if (Vector3.Dot(graphics.Camera.Forward, graphics.Camera.Translation - worldPos) > .5f)
+                return;
+            
             Vector3 screen = graphics.Camera.WorldToScreen(ref worldPos);
             graphics.EnqueueMessage(new RenderMessageDrawText("Fonts/Debug", text, 12, 1 / screen.Z, new Vector2(screen.X, screen.Y), color));
         }

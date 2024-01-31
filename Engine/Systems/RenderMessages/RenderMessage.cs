@@ -21,6 +21,10 @@ namespace Project1.Engine.Systems.RenderMessages
         DrawMesh,
         DrawLine,
         DrawQuad,
+
+        DrawBox,
+        DrawSphere,
+        DrawPlane,
     }
 
     internal abstract class RenderMessage

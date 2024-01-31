@@ -1,5 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using Project1.Engine.Components;
+using Project1.Engine.Systems.Physics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -82,10 +84,19 @@ namespace Project1.Engine.Systems
             if (Input.IsKeyDown(Keys.C))
                 m.Translation += _camera.Down * delta;
 
-            if (Input.MouseWheelDelta() != 0)
+            if (Input.IsNewMouseDown(Input.MouseButtons.LeftButton))
             {
-                _camera.SetFOV(_camera.FOV - (Input.MouseWheelDelta() / 50f));
+                var ent = _world.CreateEntity()
+                    .AddComponent(new PositionComponent(_camera.WorldMatrix.Translation))
+                    .AddComponent(new MeshComponent("models/sphere"))
+                    .AddComponent(new PrimitivePhysicsComponent(RigidBody.Sphere, RigidBodyFlags.Dynamic));
+                ent.Position.SetLocalMatrix(Matrix.CreateScale(.75f));
             }
+
+            //if (Input.MouseWheelDelta() != 0)
+            //{
+            //    _camera.SetFOV(_camera.FOV - (Input.MouseWheelDelta() / 50f));
+            //}
             _camera.SetWorldMatrix(m);
         }
     }
