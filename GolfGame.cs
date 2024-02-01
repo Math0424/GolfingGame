@@ -35,14 +35,11 @@ namespace Project1
                     .AddComponent(new PositionComponent())
                     .AddComponent(new MeshComponent("models/sphere"))
                     .AddComponent(new PrimitivePhysicsComponent(RigidBody.Sphere, RigidBodyFlags.Dynamic, .08f, .5f));
-            ent.Position.SetLocalMatrix(Matrix.CreateScale(.45f));
-            //my physics engine sucks, lots of dampening
-            // ent.GetComponent<PrimitivePhysicsComponent>().AngularDampening = 1f;
-            // ent.GetComponent<PrimitivePhysicsComponent>().LinearDampening = 0.6f;
+            ent.Position.SetLocalMatrix(Matrix.CreateScale(.40f));
 
             _world.AddSystem<WorldLoadingSystem>();
 
-#if false
+#if true
             _world.AddSystem<GolfingSystem>();
             _world.GetSystem<GolfingSystem>().SetPlayer(ent);
 #else

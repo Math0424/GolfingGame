@@ -56,6 +56,15 @@ namespace Project1.Engine.Systems
             if (physicsObjects == null)
                 return;
 
+            foreach (var x in physicsObjects)
+            {
+                if (x.EntityId == -1)
+                {
+                    Console.Write("Negative Ent ID");
+                    return;
+                }
+            }
+
             _accumulatedTime += delta.ElapsedGameTime.TotalSeconds;
             while(_accumulatedTime >= physicsTimeStep)
             {
@@ -67,14 +76,15 @@ namespace Project1.Engine.Systems
                 // broad phase and narrow phase
                 foreach (var t in physicsObjects)
                 {
-                    if (t.PhysicsLayer == PhysicsLayer.Trigger || 
+                    if (t.EntityId == -1 ||
+                        t.PhysicsLayer == PhysicsLayer.Trigger || 
                         t.RigidBody.RigidBodyFlags != RigidBodyFlags.Dynamic || 
                         t.IsSleeping)
                         continue;
                     
                     foreach (var c in physicsObjects)
                     {
-                        if (t != c) //&& Vector3.Distance(target.RigidBody.WorldMatrix.Translation, contact.RigidBody.WorldMatrix.Translation) <= target.RigidBody.BoundingSphere + contact.RigidBody.BoundingSphere)
+                        if (c.EntityId != -1 && t != c) //&& Vector3.Distance(target.RigidBody.WorldMatrix.Translation, contact.RigidBody.WorldMatrix.Translation) <= target.RigidBody.BoundingSphere + contact.RigidBody.BoundingSphere)
                         {
                             Collision col;
                             CollisionSolver.Solve(t, c, out col);
@@ -175,7 +185,8 @@ namespace Project1.Engine.Systems
             }
 
             foreach (var x in physicsObjects)
-                x.UpdateWorldMatrix();
+                if (x.EntityId != -1)
+                    x.UpdateWorldMatrix();
 
         }
     }

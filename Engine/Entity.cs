@@ -69,13 +69,13 @@ namespace Project1.Engine
         public void Close() {
             foreach(var x in _components)
             {
-                x.Value.Close();
                 World.UnRegisterEntityComponent(x.Value);
+                x.Value.Close();
             }
-            Id = -1;
             _components.Clear();
             _cachedPos = null;
             World.RemoveEntity(Id);
+            Id = -1;
         }
     }
 }

@@ -57,8 +57,8 @@ namespace Project1.Engine.Components
         {
             RigidBody = collider;
             Restitution = .5f;
-            StaticFriction = 0.4f;
-            DynamicFriction = 0.1f;
+            StaticFriction = 0.04f;
+            DynamicFriction = 0.01f;
             _userFlags = flags;
             _userMass = mass;
             _userRadius = radius;

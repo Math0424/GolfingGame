@@ -27,6 +27,8 @@ namespace Project1.MyGame
         {
             "Worlds/world1.txt",
             "Worlds/world2.txt",
+            "Worlds/world3.txt",
+            "Worlds/world4.txt",
         };
 
         public GolfingSystem(Game game, World world, WorldLoadingSystem worldLoader, RenderingSystem render, Camera camera)
@@ -47,7 +49,7 @@ namespace Project1.MyGame
 
         private void LoadWorld(int id)
         {
-            _worldLoader.LoadWorld(_levels[id]);
+            _worldLoader.LoadWorld(_levels[id % _levels.Length]);
             if (_player != null)
                 _player.GetComponent<PrimitivePhysicsComponent>().RigidBody.WorldMatrix = Matrix.CreateTranslation(_worldLoader.PlayerLocation);
             var hole = _world.GetEntity(_worldLoader.HoleId).GetComponent<PrimitivePhysicsComponent>();
@@ -57,14 +59,9 @@ namespace Project1.MyGame
 
         public void EnterHole()
         {
-            var enumerator = _world.GetEntities();
-            while(enumerator.Current != null)
-            {
-                var entity = enumerator.Current;
-                if (entity.Id != _player.Id)
-                    entity.Close();
-                enumerator.MoveNext();
-            }
+            foreach(var e in _world.GetEntities())
+                if (e.Id != _player.Id)
+                    e.Close();
             LoadWorld(++_worldId);
             _strokes = 0;
             _player.GetComponent<PrimitivePhysicsComponent>().Stop();
@@ -80,11 +77,19 @@ namespace Project1.MyGame
         {
             if (_player != null && _player.Id != -1)
             {
+                var physics = _player.GetComponent<PrimitivePhysicsComponent>();
+                _render.EnqueueMessage(new RenderMessageDrawText("Fonts/Debug", $"World: {_levels[_worldId % _levels.Length]}\nStrokes: {_strokes}", 20, 0, Vector2.One * 20, physics.IsSleeping ? Color.Azure : Color.Red));
+
                 var matrix = _cam.WorldMatrix;
                 matrix.Translation = _player.Position.Position;
                 _cam.SetWorldMatrix(matrix);
 
-                var physics = _player.GetComponent<PrimitivePhysicsComponent>();
+                if (_player.Position.Position.Y < _worldLoader.KillLevel.Y)
+                {
+                    _strokes++;
+                    physics.RigidBody.WorldMatrix = Matrix.CreateTranslation(_worldLoader.PlayerLocation);
+                }
+
                 if (physics.IsSleeping)
                 {
                     if (Input.IsNewMouseDown(Input.MouseButtons.LeftButton))
@@ -94,9 +99,7 @@ namespace Project1.MyGame
                     {
                         Vector2 deltaMouse = Input.MousePosition() - _mouseDragStart;
                         Vector3 val = -new Vector3(deltaMouse.X, 0, deltaMouse.Y) / 100;
-                        Vector3 torque = -Vector3.Normalize(Vector3.Cross(val, Vector3.Up)) / 100;
                         physics.AddForce(val);
-                        physics.AddTorque(torque);
                         _strokes++;
                     }
 

@@ -15,6 +15,7 @@ namespace Project1.MyGame
     {
 
         public Vector3 PlayerLocation { get; private set; }
+        public Vector3 KillLevel { get; private set; }
         public int HoleId { get; private set; }
 
         private World _world;
@@ -46,8 +47,8 @@ namespace Project1.MyGame
 
             Matrix localMatrix = Matrix.CreateScale(scale) *
                             Matrix.CreateRotationX(MathHelper.ToRadians(rotation.X)) *
-                            Matrix.CreateRotationY(MathHelper.ToRadians(rotation.Y)) *
-                            Matrix.CreateRotationZ(MathHelper.ToRadians(rotation.Z));
+                            Matrix.CreateRotationZ(MathHelper.ToRadians(rotation.Z)) *
+                            Matrix.CreateRotationY(MathHelper.ToRadians(rotation.Y));
             Matrix worldMatrix = localMatrix * Matrix.CreateTranslation(pos);
 
             PrimitivePhysicsComponent phyx;
@@ -76,6 +77,9 @@ namespace Project1.MyGame
                     break;
                 case "player":
                     PlayerLocation = pos;
+                    break;
+                case "kill":
+                    KillLevel = pos;
                     break;
             }
         }

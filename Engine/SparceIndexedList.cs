@@ -13,7 +13,7 @@ namespace Project1.Engine
     /// that can efficiently retrieve something by an index
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    internal class SparceIndexedList<T> : IEnumerable<T> where T : class
+    internal class SparceIndexedList<T> where T : class
     {
         private List<T> _contents;
         private List<int> _indexes;
@@ -81,14 +81,9 @@ namespace Project1.Engine
             Count = 0;
         }
 
-        public IEnumerator<T> GetEnumerator()
+        public List<T> GetContents()
         {
-            return _contents.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return _contents.GetEnumerator();
+            return _contents;
         }
 
         public T this[int key]

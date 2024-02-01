@@ -65,9 +65,11 @@ namespace Project1.Engine
             return this;
         }
 
-        public IEnumerator<Entity> GetEntities()
+        public List<Entity> GetEntities()
         {
-            return _entities.GetEnumerator();
+            var ents = new List<Entity>(_entities.GetContents());
+            ents.RemoveAll(e => e == null);
+            return ents;
         }
 
         public Entity GetEntity(int Id)
@@ -110,9 +112,11 @@ namespace Project1.Engine
 
         public void UnRegisterEntityComponent(EntityComponent component)
         {
-            Type t = component.GetType();
-            if (_components.ContainsKey(t))
-                _components[t].Remove(component);
+            foreach (var x in _components)
+                if (x.Key.IsAssignableFrom(component.GetType()))
+                    if (x.Value.Remove(component))
+                        return;
+            throw new Exception($"Component {component.GetType()} is not registered");
         }
 
         public Entity CreateEntity()
@@ -158,7 +162,7 @@ namespace Project1.Engine
         {
             foreach (var x in _systems.Values)
                 x.Close();
-            foreach (var x in _entities)
+            foreach (var x in GetEntities())
                 x.Close();
             _entities.Clear();
         }
