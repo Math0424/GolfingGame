@@ -79,6 +79,18 @@ namespace Project1.Engine.Systems.GUI
             }
         }
 
+        public virtual void PreHandleInput(ref HudInput input)
+        {
+            if (Visible)
+            {
+                foreach (var x in Children)
+                    x.PreHandleInput(ref input);
+                if (!input.Captured)
+                    HandleInput(ref input);
+            }
+        }
+
+        public abstract void HandleInput(ref HudInput input);
         public abstract void Layout();
         public abstract void Draw(float deltaTime);
     }

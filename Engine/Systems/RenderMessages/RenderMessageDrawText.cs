@@ -7,6 +7,13 @@ using System.Threading.Tasks;
 
 namespace Project1.Engine.Systems.RenderMessages
 {
+    public enum TextDrawOptions
+    {
+        Default,
+        Centered,
+    }
+
+
     internal class RenderMessageDrawText : RenderMessageDepth
     {
         public string Text { get; private set; }
@@ -14,13 +21,15 @@ namespace Project1.Engine.Systems.RenderMessages
         public float Scale { get; private set; }
         public Vector2 Pos { get; private set; }
         public Color Color { get; private set; }
-        public RenderMessageDrawText(string font, string text, float scale, float depth, Vector2 pos, Color color) : base(depth, RenderMessageType.DrawText)
+        public TextDrawOptions DrawOptions { get; private set; }
+        public RenderMessageDrawText(string font, string text, float scale, float depth, Vector2 pos, Color color, TextDrawOptions drawOptions = TextDrawOptions.Default) : base(depth, RenderMessageType.DrawText)
         {
             this.Font = font;
             this.Text = text;
             this.Scale = scale;
             this.Pos = pos;
             this.Color = color;
+            DrawOptions = drawOptions;
         }
     }
 }

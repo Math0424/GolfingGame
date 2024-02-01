@@ -12,6 +12,7 @@ namespace Project1.Engine.Systems.GUI
 
         public HudCore(HudRoot root) : base(root)
         {
+            _core = this;
             Root = root.System;
             Position = Root.ScreenCenter;
             Bounds = new Vector2I(Position.X * 2, Position.Y * 2);

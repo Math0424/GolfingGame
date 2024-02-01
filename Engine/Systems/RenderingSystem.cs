@@ -119,13 +119,6 @@ namespace Project1.Engine.Systems
             {
                 _debugSpriteBatch.Begin();
 
-                Vector3 prevAmbientColor = _basicEffect.AmbientLightColor;
-                _basicEffect.World = Matrix.Identity;
-                _basicEffect.TextureEnabled = false;
-                _basicEffect.VertexColorEnabled = true;
-                _basicEffect.AmbientLightColor = Vector3.One;
-                _basicEffect.CurrentTechnique.Passes[0].Apply();
-
                 long ticksTaken = (DateTime.Now.Ticks - timeNow) / 10000;
                 
                 _debugSpriteBatch.DrawString(_font, $"Rendering Debug:\n" +
@@ -141,7 +134,6 @@ namespace Project1.Engine.Systems
                     $"Pos: [{Math.Round(Camera.Translation.X, 2)}, {Math.Round(Camera.Translation.Y, 2)}, {Math.Round(Camera.Translation.Z, 2)}]",
                     new Vector2(0, 0), Color.Yellow);
 
-                _basicEffect.AmbientLightColor = prevAmbientColor;
                 _debugSpriteBatch.End();
             }
         }
@@ -219,9 +211,9 @@ namespace Project1.Engine.Systems
                     case RenderMessageType.DrawMeshWithEffect:
                         var drawEffectMesh = (RenderMessageDrawMeshWithEffect)message;
                         var effect = _effects[drawEffectMesh.Effect];
-                        foreach(ModelMesh mesh in _meshes[drawEffectMesh.Model].Meshes)
+                        foreach (ModelMesh mesh in _meshes[drawEffectMesh.Model].Meshes)
                         {
-                            foreach(ModelMeshPart part in mesh.MeshParts)
+                            foreach (ModelMeshPart part in mesh.MeshParts)
                             {
                                 part.Effect = effect;
                                 effect.Parameters["World"].SetValue(drawEffectMesh.Matrix * mesh.ParentBone.Transform);
@@ -278,7 +270,11 @@ namespace Project1.Engine.Systems
                 }
             }
 
-            RenderMessage[] depthSpriteBatch = _renderMessages.Where(e => e.Type == RenderMessageType.DrawSprite || e.Type == RenderMessageType.DrawText).OrderBy(e => -((RenderMessageDepth)e).Depth).ToArray();
+            RenderMessage[] depthSpriteBatch = _renderMessages.Where(e => 
+                                                        e.Type == RenderMessageType.DrawSprite || 
+                                                        e.Type == RenderMessageType.DrawText || 
+                                                        e.Type == RenderMessageType.DrawColoredSprite)
+                                                .OrderBy(e => -((RenderMessageDepth)e).Depth).ToArray();
             _spriteEffect.CurrentTechnique.Passes[0].Apply();
             _spriteBatch.Begin();
             foreach (var sprite in depthSpriteBatch)
@@ -289,9 +285,19 @@ namespace Project1.Engine.Systems
                         var drawSprite = (RenderMessageDrawSprite)sprite;
                         _spriteBatch.Draw(_textures[drawSprite.Texture], drawSprite.Rectangle, Color.White);
                         break;
+                    case RenderMessageType.DrawColoredSprite:
+                        var drawColoredSprite = (RenderMessageDrawColoredSprite)sprite;
+                        _spriteBatch.Draw(_textures[drawColoredSprite.Texture], drawColoredSprite.Rectangle, drawColoredSprite.Color);
+                        break;
                     case RenderMessageType.DrawText:
                         var drawText = (RenderMessageDrawText)sprite;
-                        _spriteBatch.DrawString(_fonts[drawText.Font], drawText.Text, drawText.Pos, drawText.Color);
+                        if (drawText.DrawOptions == TextDrawOptions.Centered)
+                        {
+                            Vector2 width = _fonts[drawText.Font].MeasureString(drawText.Text);
+                            _spriteBatch.DrawString(_fonts[drawText.Font], drawText.Text, drawText.Pos - width/2, drawText.Color);
+                        }
+                        else
+                            _spriteBatch.DrawString(_fonts[drawText.Font], drawText.Text, drawText.Pos, drawText.Color);
                         break;
                 }
             }

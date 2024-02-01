@@ -51,7 +51,7 @@ namespace Project1.Engine.Systems.GUI
         }
 
         private HudElement _classParent;
-        private HudCore _core;
+        protected HudCore _core;
         private ParentAlignments _parentAlignments;
         private SizeAlignments _sizeAlignments;
         private Vector2I _bounds;
@@ -67,8 +67,9 @@ namespace Project1.Engine.Systems.GUI
 
         public HudElement(HudElement parent) : base(parent)
         {
-            _core = parent?._core;
+            _core = parent._core;
             _classParent = parent;
+            zOffset = parent.zOffset - 1;
             Setup();
         }
 
@@ -80,6 +81,7 @@ namespace Project1.Engine.Systems.GUI
             Position = Parent.Position;
         }
 
+        public override void HandleInput(ref HudInput input) { }
         public override void Layout() {}
 
         protected void UpdateSizeAlignment()
@@ -97,8 +99,7 @@ namespace Project1.Engine.Systems.GUI
             Vector2I newPos = Position;
             if (_parentAlignments.HasFlag(ParentAlignments.Center))
             {
-                newPos.X = Parent.PositionRef.X + Bounds.X / 2;
-                newPos.Y = Parent.PositionRef.Y + Bounds.Y / 2;
+                Position = Parent.PositionRef;
                 return;
             }
 

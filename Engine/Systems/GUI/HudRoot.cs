@@ -19,6 +19,11 @@ namespace Project1.Engine.Systems.GUI
 
         }
 
+        public override void HandleInput(ref HudInput input)
+        {
+
+        }
+
         public override void Layout()
         {
 

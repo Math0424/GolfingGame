@@ -21,7 +21,18 @@ namespace Project1.Engine
             return $"{{X:{X}, Y:{Y}}}";
         }
 
+        public static Vector2I operator +(Vector2I v1, Vector2I v2)
+        {
+            return new Vector2I(v1.X + v2.X, v1.Y + v2.Y);
+        }
+
+        public static Vector2I operator -(Vector2I v1, Vector2I v2)
+        {
+            return new Vector2I(v1.X - v2.X, v1.Y - v2.Y);
+        }
+
         public static implicit operator Vector2(Vector2I v) => new Vector2(v.X, v.Y);
+        public static explicit operator Vector2I(Vector2 v) => new Vector2I((int)v.X, (int)v.Y);
     }
 
     internal static class MathExtensions

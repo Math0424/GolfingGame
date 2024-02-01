@@ -17,6 +17,7 @@ namespace Project1.Engine.Systems.RenderMessages
         LoadTexture,
 
         DrawSprite,
+        DrawColoredSprite,
         DrawText,
 
         DrawMesh,

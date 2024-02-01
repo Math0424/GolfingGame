@@ -52,13 +52,25 @@ namespace Project1.Engine.Systems.GUI
             _render.EnqueueMessage(new RenderMessageDrawSprite(sprite, rec, depth));
         }
 
-        public void DrawText(string font, string text, float scale, float depth, Vector2I pos, Color color)
+        public void DrawColoredSprite(string sprite, Vector2I pos, Vector2I bounds, float depth, Color color)
         {
-            _render.EnqueueMessage(new RenderMessageDrawText(font, text, scale, depth, pos, color));
+            Rectangle rec = new Rectangle(pos.X - bounds.X / 2, pos.Y - bounds.Y / 2, bounds.X, bounds.Y);
+            _render.EnqueueMessage(new RenderMessageDrawColoredSprite(sprite, rec, depth, color));
+        }
+
+        public void DrawText(string font, string text, float scale, float depth, Vector2I pos, Color color, TextDrawOptions options = TextDrawOptions.Default)
+        {
+            _render.EnqueueMessage(new RenderMessageDrawText(font, text, scale, depth, pos, color, options));
         }
 
         public override void Update(GameTime delta)
         {
+            HudInput curr = new HudInput()
+            {
+                Captured = false,
+                Location = (Vector2I)Input.MousePosition(),
+            };
+            Root.PreHandleInput(ref curr);
             Root.PreLayout(false);
         }
 
