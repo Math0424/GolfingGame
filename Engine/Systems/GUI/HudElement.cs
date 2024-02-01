@@ -21,7 +21,9 @@ namespace Project1.Engine.Systems.GUI
 
         public bool UseCursor { get; set; }
         public bool ShareCursor { get; set; }
-        public Rectangle Bounds
+
+        public int Padding;
+        public Vector2I Bounds
         {
             get { return _bounds; }
             set {
@@ -49,55 +51,86 @@ namespace Project1.Engine.Systems.GUI
         }
 
         private HudElement _classParent;
+        private HudCore _core;
         private ParentAlignments _parentAlignments;
         private SizeAlignments _sizeAlignments;
-        private Rectangle _bounds;
+        private Vector2I _bounds;
+
+        public HudElement(HudRoot core) : base(core) {}
+
+        public HudElement(HudCore core) : base(core)
+        {
+            _core = core;
+            _classParent = core;
+            Setup();
+        }
 
         public HudElement(HudElement parent) : base(parent)
         {
-            ShareCursor = false;
-            Bounds = new Rectangle(0, 0, 10, 10);
-            _parentAlignments = ParentAlignments.None | ParentAlignments.Padding;
+            _core = parent?._core;
+            _classParent = parent;
+            Setup();
         }
 
-        public override void Layout()
+        public void Setup()
         {
-
+            ShareCursor = false;
+            Visible = true;
+            Bounds = new Vector2I(10, 10);
+            Position = Parent.Position;
         }
+
+        public override void Layout() {}
 
         protected void UpdateSizeAlignment()
         {
-            Rectangle size = Bounds;
+            Vector2I size = Bounds;
             if ((_sizeAlignments & SizeAlignments.Width) == SizeAlignments.Width)
-                size.Width = _classParent.Bounds.Width;
+                size.X = _classParent.Bounds.X;
             if((_sizeAlignments & SizeAlignments.Height) == SizeAlignments.Height)
-                size.Height = _classParent.Bounds.Height;
+                size.Y = _classParent.Bounds.Y;
             Bounds = size;
         }
 
         protected void UpdateParentAlignment()
         {
-            if ((_parentAlignments & ParentAlignments.Top) == ParentAlignments.Top)
+            Vector2I newPos = Position;
+            if (_parentAlignments.HasFlag(ParentAlignments.Center))
             {
+                newPos.X = Parent.PositionRef.X + Bounds.X / 2;
+                newPos.Y = Parent.PositionRef.Y + Bounds.Y / 2;
+                return;
+            }
 
+            int inner = _parentAlignments.HasFlag(ParentAlignments.Inner) ? -1 : 1;
+            int padding = _parentAlignments.HasFlag(ParentAlignments.Padding) ? Padding * inner : 0;
+
+            if (_parentAlignments.HasFlag(ParentAlignments.Top))
+            {
+                newPos.Y = Parent.PositionRef.Y - (_classParent.Bounds.Y / 2) - padding;
+                newPos.Y -= (Bounds.Y / 2) * inner;
             }
             if (_parentAlignments.HasFlag(ParentAlignments.Bottom))
             {
-
+                newPos.Y = Parent.PositionRef.Y + (_classParent.Bounds.Y / 2) + padding;
+                newPos.Y += (Bounds.Y / 2) * inner;
             }
             if (_parentAlignments.HasFlag(ParentAlignments.Left))
             {
-
+                newPos.X = Parent.PositionRef.X - (_classParent.Bounds.X / 2) - padding;
+                newPos.X -= (Bounds.X / 2) * inner;
             }
             if (_parentAlignments.HasFlag(ParentAlignments.Right))
             {
-
+                newPos.X = Parent.PositionRef.X + (_classParent.Bounds.X / 2) + padding;
+                newPos.X += (Bounds.X / 2) * inner;
             }
+            Position = newPos;
         }
 
-        public override void Draw()
+        public override void Draw(float deltaTime)
         {
-
+            _core.Root.DrawSprite("Textures/GUI/ColorableSprite", Position, Bounds, zOffset);
         }
 
     }

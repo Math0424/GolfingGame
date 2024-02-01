@@ -6,19 +6,20 @@ using System.Threading.Tasks;
 
 namespace Project1.Engine.Systems.GUI
 {
-    [Flags]
     internal enum ParentAlignments
     {
-        None,
-        Inner,
-        Outer,
+        None = 0,
+        Inner = 1 << 0,
+        Outer = 1 << 1,
 
-        Top,
-        Bottom,
-        Left,
-        Right,
+        Top = 1 << 2,
+        Bottom = 1 << 3,
+        Left = 1 << 4,
+        Right = 1 << 5,
 
-        Padding,
+        Center = Top | Bottom | Left | Right,
+
+        Padding = 1 << 6,
     }
 
     internal enum SizeAlignments
@@ -26,7 +27,7 @@ namespace Project1.Engine.Systems.GUI
         None = 0,
         Width = 1 << 0,
         Height = 1 << 1,
-        Both = 3,
+        Both = Width | Height,
     }
 
 }

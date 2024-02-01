@@ -38,6 +38,8 @@ namespace Project1
             ent.Position.SetLocalMatrix(Matrix.CreateScale(.40f));
 
             _world.AddSystem<WorldLoadingSystem>();
+            var hud = _world.GetSystem<HudSystem>();
+            new GolfGUI(hud.Root);
 
 #if true
             _world.AddSystem<GolfingSystem>();

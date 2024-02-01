@@ -119,3 +119,15 @@
 /processorParam:TextureFormat=Color
 /build:Textures/20221201_094754.jpg;Textures/shrimp.jpg
 
+#begin Textures/GUI/ColorableSprite.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/GUI/ColorableSprite.png
+

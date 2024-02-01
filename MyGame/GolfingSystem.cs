@@ -53,7 +53,6 @@ namespace Project1.MyGame
             if (_player != null)
                 _player.GetComponent<PrimitivePhysicsComponent>().RigidBody.WorldMatrix = Matrix.CreateTranslation(_worldLoader.PlayerLocation);
             var hole = _world.GetEntity(_worldLoader.HoleId).GetComponent<PrimitivePhysicsComponent>();
-            hole.Collision += (e, v) => Console.WriteLine($"{_worldLoader.HoleId}->{e} at {v} while ball is at {_player.Position.Position}");
             hole.Collision += (e, v) => { if (e == _player.Id) EnterHole(); };
         }
 
@@ -88,6 +87,7 @@ namespace Project1.MyGame
                 {
                     _strokes++;
                     physics.RigidBody.WorldMatrix = Matrix.CreateTranslation(_worldLoader.PlayerLocation);
+                    physics.RigidBody.Stop();
                 }
 
                 if (physics.IsSleeping)

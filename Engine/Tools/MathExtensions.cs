@@ -7,6 +7,23 @@ using System.Threading.Tasks;
 
 namespace Project1.Engine
 {
+    public struct Vector2I
+    {
+        public int X;
+        public int Y;
+        public Vector2I(int x, int y)
+        {
+            X = x;
+            Y = y;
+        }
+        public override string ToString()
+        {
+            return $"{{X:{X}, Y:{Y}}}";
+        }
+
+        public static implicit operator Vector2(Vector2I v) => new Vector2(v.X, v.Y);
+    }
+
     internal static class MathExtensions
     {
 

@@ -16,11 +16,17 @@ namespace Project1.Engine.Systems.GUI
             set => _parent = value;
         }
 
-        public Vector2 Position { get; set; }
+        public ref Vector2I PositionRef { get => ref _position; }
+        public Vector2I Position { 
+            get => _position; 
+            set => _position = value; 
+        }
+
         public bool InputEnabled { get; set; }
         public IReadOnlyList<HudNode> Children => _children;
         public float zOffset { get; set; }
 
+        private Vector2I _position;
         private List<HudNode> _children;
         private bool _registered;
         protected HudNode _parent;
@@ -32,8 +38,9 @@ namespace Project1.Engine.Systems.GUI
 
         public HudNode(HudNode parent)
         {
+            Parent = parent;
             _children = new List<HudNode>();
-            parent?.AddChild(this);
+            Parent?.AddChild(this);
         }
 
         public void AddChild(HudNode element)
@@ -62,17 +69,17 @@ namespace Project1.Engine.Systems.GUI
             }
         }
 
-        public virtual void PreDraw()
+        public virtual void PreDraw(float deltaTime)
         {
             if (Visible)
             {
-                Draw();
-                foreach(var x in Children)
-                    x.PreDraw();
+                Draw(deltaTime);
+                foreach (var x in Children)
+                    x.PreDraw(deltaTime);
             }
         }
 
         public abstract void Layout();
-        public abstract void Draw();
+        public abstract void Draw(float deltaTime);
     }
 }

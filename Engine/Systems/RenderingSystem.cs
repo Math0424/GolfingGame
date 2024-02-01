@@ -17,6 +17,7 @@ namespace Project1.Engine.Systems
         public Camera Camera { get; private set; }
         public Vector2 ScreenBounds { get; private set; }
         public Action DoDraw;
+        public Action OnGraphicsReady;
 
         private GraphicsDeviceManager _graphics;
         private GraphicsDevice _graphicsDevice;
@@ -81,6 +82,8 @@ namespace Project1.Engine.Systems
             ScreenBounds = new Vector2(_graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height);
             Camera.SetupProjection(_graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height, 90);
             //Camera.SetupOrthographic(_graphicsDevice.Viewport.Width / 20, _graphicsDevice.Viewport.Height / 20, -50, 50);
+
+            OnGraphicsReady?.Invoke();
         }
 
         // TODO move draw to a different thread away from the main gameloop
