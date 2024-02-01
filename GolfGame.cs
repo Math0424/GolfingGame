@@ -15,41 +15,40 @@ namespace Project1
 {
     public class GolfGame : Game
     {
-        private World _world;
-
         public GolfGame()
         {
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
 
-            _world = new World(this, "Level1")
-                .AddSystem<Camera>()
-                .AddSystem<RenderingSystem>()
-                .AddSystem<PhysicsSystem>()
-                .AddSystem<HudSystem>();
+            Components.Add(new MainMenuWorld(this));
+
+            //_world = new World(this)
+            //    .AddSystem<Camera>()
+            //    .AddSystem<RenderingSystem>()
+            //    .AddSystem<PhysicsSystem>()
+            //    .AddSystem<HudSystem>();
         }
 
         protected override void LoadContent()
         {
-            var ent = _world.CreateEntity()
-                    .AddComponent(new PositionComponent())
-                    .AddComponent(new MeshComponent("models/sphere"))
-                    .AddComponent(new PrimitivePhysicsComponent(RigidBody.Sphere, RigidBodyFlags.Dynamic, .08f, .5f));
-            ent.Position.SetLocalMatrix(Matrix.CreateScale(.40f));
+            //var ent = _world.CreateEntity()
+            //        .AddComponent(new PositionComponent())
+            //        .AddComponent(new MeshComponent("models/sphere"))
+            //        .AddComponent(new PrimitivePhysicsComponent(RigidBody.Sphere, RigidBodyFlags.Dynamic, .08f, .5f));
+            //ent.Position.SetLocalMatrix(Matrix.CreateScale(.40f));
+            //
+            //_world.AddSystem<WorldLoadingSystem>();
+            // var hud = _world.GetSystem<HudSystem>();
+            // new MainMenuGUI(hud.Root);
 
-            _world.AddSystem<WorldLoadingSystem>();
-            var hud = _world.GetSystem<HudSystem>();
-            new GolfGUI(hud.Root);
-
-#if true
+#if false
             _world.AddSystem<GolfingSystem>();
             _world.GetSystem<GolfingSystem>().SetPlayer(ent);
 #else
-            _world.AddSystem<SpectatorMovement>();
-            var worldLoader = _world.GetSystem<WorldLoadingSystem>();
-            worldLoader.LoadWorld("worlds/world2.txt");
+            //_world.AddSystem<SpectatorMovement>();
+            //var worldLoader = _world.GetSystem<WorldLoadingSystem>();
+            //worldLoader.LoadWorld("worlds/world2.txt");
 #endif
-
         }
 
         protected override void Update(GameTime gameTime)
@@ -57,14 +56,12 @@ namespace Project1
             if (Input.IsKeyDown(Keys.Escape))
                 Exit();
 
-            _world.Update(gameTime);
-            Input.UpdateState();
             base.Update(gameTime);
+            Input.UpdateState();
         }
 
         protected override void Draw(GameTime gameTime)
         {
-            _world.Draw(gameTime);
             base.Draw(gameTime);
         }
     }

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Project1.Engine.Systems.GUI
 {
-    internal class HudInput
+    internal struct HudInput
     {
 
         public bool Captured;

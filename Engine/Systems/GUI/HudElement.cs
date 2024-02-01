@@ -103,28 +103,29 @@ namespace Project1.Engine.Systems.GUI
                 return;
             }
 
-            int inner = _parentAlignments.HasFlag(ParentAlignments.Inner) ? -1 : 1;
-            int padding = _parentAlignments.HasFlag(ParentAlignments.Padding) ? Padding * inner : 0;
+            int innerV = _parentAlignments.HasFlag(ParentAlignments.InnerV) ? -1 : 1;
+            int innerH = _parentAlignments.HasFlag(ParentAlignments.InnerH) ? -1 : 1;
+            int padding = _parentAlignments.HasFlag(ParentAlignments.Padding) ? Padding : 0;
 
             if (_parentAlignments.HasFlag(ParentAlignments.Top))
             {
-                newPos.Y = Parent.PositionRef.Y - (_classParent.Bounds.Y / 2) - padding;
-                newPos.Y -= (Bounds.Y / 2) * inner;
+                newPos.Y = Parent.PositionRef.Y - (_classParent.Bounds.Y / 2) - padding * innerV;
+                newPos.Y -= (Bounds.Y / 2) * innerV;
             }
             if (_parentAlignments.HasFlag(ParentAlignments.Bottom))
             {
-                newPos.Y = Parent.PositionRef.Y + (_classParent.Bounds.Y / 2) + padding;
-                newPos.Y += (Bounds.Y / 2) * inner;
+                newPos.Y = Parent.PositionRef.Y + (_classParent.Bounds.Y / 2) + padding * innerV;
+                newPos.Y += (Bounds.Y / 2) * innerV;
             }
             if (_parentAlignments.HasFlag(ParentAlignments.Left))
             {
-                newPos.X = Parent.PositionRef.X - (_classParent.Bounds.X / 2) - padding;
-                newPos.X -= (Bounds.X / 2) * inner;
+                newPos.X = Parent.PositionRef.X - (_classParent.Bounds.X / 2) - padding * innerH;
+                newPos.X -= (Bounds.X / 2) * innerH;
             }
             if (_parentAlignments.HasFlag(ParentAlignments.Right))
             {
-                newPos.X = Parent.PositionRef.X + (_classParent.Bounds.X / 2) + padding;
-                newPos.X += (Bounds.X / 2) * inner;
+                newPos.X = Parent.PositionRef.X + (_classParent.Bounds.X / 2) + padding * innerH;
+                newPos.X += (Bounds.X / 2) * innerH;
             }
             Position = newPos;
         }

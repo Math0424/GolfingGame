@@ -9,8 +9,8 @@ namespace Project1.Engine.Systems.GUI
     internal enum ParentAlignments
     {
         None = 0,
-        Inner = 1 << 0,
-        Outer = 1 << 1,
+        InnerV = 1 << 0,
+        InnerH = 1 << 1,
 
         Top = 1 << 2,
         Bottom = 1 << 3,
@@ -18,7 +18,9 @@ namespace Project1.Engine.Systems.GUI
         Right = 1 << 5,
 
         Center = Top | Bottom | Left | Right,
+        Inner = InnerV | InnerH,
 
+        Outer = 1 << 7,
         Padding = 1 << 6,
     }
 

@@ -122,7 +122,6 @@ namespace Project1.Engine.Systems
                 long ticksTaken = (DateTime.Now.Ticks - timeNow) / 10000;
                 
                 _debugSpriteBatch.DrawString(_font, $"Rendering Debug:\n" +
-                    $"World: {_world.WorldName}\n" +
                     $"Time: {Math.Round(delta.TotalGameTime.TotalMilliseconds / 1000, 2)}s\n" +
                     $"FPS: {Math.Round(delta.ElapsedGameTime.TotalSeconds * 1000, 2)}ms {Math.Round((ticksTaken / delta.ElapsedGameTime.TotalMilliseconds) * 100)}%\n" +
                     $"TPS: {Math.Round(tickTime.ElapsedGameTime.TotalSeconds * 1000, 2)}ms\n" +

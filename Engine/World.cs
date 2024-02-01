@@ -15,7 +15,6 @@ namespace Project1.Engine
 {
     internal class World
     {
-        public string WorldName { get; private set; }
         public Action GameFocused;
         public Game Game { private set; get; }
         public int EntityCount => _entities.Count;
@@ -26,10 +25,9 @@ namespace Project1.Engine
         private bool _focused;
         private InjectionContainer _injectionContainer;
 
-        public World(Game game, string name) 
+        public World(Game game) 
         {
             Game = game;
-            WorldName = name;
             
             _focused = game.IsActive;
             _entities = new SparceIndexedList<Entity>();

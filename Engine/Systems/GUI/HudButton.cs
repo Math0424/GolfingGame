@@ -12,8 +12,8 @@ namespace Project1.Engine.Systems.GUI
         public Color HoverColor;
         public Color PressedColor;
 
-        public Action OnHovered;
-        public Action OnClicked;
+        public Action<object> OnHovered;
+        public Action<object> OnClicked;
 
         protected bool _isHovered;
         protected bool _isPressed;
@@ -32,7 +32,7 @@ namespace Project1.Engine.Systems.GUI
                 if (!_wasWithinBounds)
                 {
                     _wasWithinBounds = true;
-                    OnHovered?.Invoke();
+                    OnHovered?.Invoke(this);
                 }
 
                 _isHovered = true;
@@ -42,7 +42,7 @@ namespace Project1.Engine.Systems.GUI
                 if (_isPressed && Input.IsNewMouseUp(Input.MouseButtons.LeftButton))
                 {
                     _isPressed = false;
-                    OnClicked?.Invoke();
+                    OnClicked?.Invoke(this);
                 }
             }
             else

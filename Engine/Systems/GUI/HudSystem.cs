@@ -17,7 +17,9 @@ namespace Project1.Engine.Systems.GUI
 
         private Game _game;
         private RenderingSystem _render;
-        
+        private HudInput _hudInput;
+
+        public HudInput HudInput => _hudInput;
         public HudRoot Root { get; private set; }
         public Vector2I ScreenCenter { get; private set; }
         public Vector2I ScreenBounds { get; private set; }
@@ -65,12 +67,12 @@ namespace Project1.Engine.Systems.GUI
 
         public override void Update(GameTime delta)
         {
-            HudInput curr = new HudInput()
+            _hudInput = new HudInput()
             {
                 Captured = false,
                 Location = (Vector2I)Input.MousePosition(),
             };
-            Root.PreHandleInput(ref curr);
+            Root.PreHandleInput(ref _hudInput);
             Root.PreLayout(false);
         }
 
