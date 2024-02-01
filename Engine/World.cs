@@ -65,6 +65,11 @@ namespace Project1.Engine
             return this;
         }
 
+        public IEnumerator<Entity> GetEntities()
+        {
+            return _entities.GetEnumerator();
+        }
+
         public Entity GetEntity(int Id)
         {
             return _entities[Id];
@@ -115,6 +120,11 @@ namespace Project1.Engine
             Entity entity = new Entity(this);
             entity.Id = _entities.Add(entity);
             return entity;
+        }
+
+        public void RemoveEntity(int id)
+        {
+            _entities.Remove(id);
         }
 
         public void Update(GameTime deltaTime)

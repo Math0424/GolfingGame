@@ -15,6 +15,7 @@ namespace Project1.MyGame
     {
 
         public Vector3 PlayerLocation { get; private set; }
+        public int HoleId { get; private set; }
 
         private World _world;
         public WorldLoadingSystem(World world)
@@ -24,7 +25,7 @@ namespace Project1.MyGame
 
         public void LoadWorld(string path)
         {
-            string content = File.ReadAllText(path);
+            string content = File.ReadAllText(Path.Combine(_world.Game.Content.RootDirectory, path));
             Console.WriteLine($"Loading world {Path.GetFileName(path)}");
             string[] lines = content.Split("\n");
             Console.WriteLine($" | Loading {lines.Length} empties");
@@ -40,7 +41,7 @@ namespace Project1.MyGame
             string[] args = line.Split(':');
             string name = args[0];
             Vector3 pos = new Vector3(float.Parse(args[1]), float.Parse(args[3]), float.Parse(args[2]));
-            Vector3 scale = new Vector3(float.Parse(args[5]), float.Parse(args[6]), float.Parse(args[4]));
+            Vector3 scale = new Vector3(float.Parse(args[4]), float.Parse(args[6]), float.Parse(args[5]));
             Vector3 rotation = new Vector3(-float.Parse(args[7]), float.Parse(args[9]), -float.Parse(args[8]));
 
             Matrix localMatrix = Matrix.CreateScale(scale) *
@@ -49,21 +50,29 @@ namespace Project1.MyGame
                             Matrix.CreateRotationZ(MathHelper.ToRadians(rotation.Z));
             Matrix worldMatrix = localMatrix * Matrix.CreateTranslation(pos);
 
+            PrimitivePhysicsComponent phyx;
             switch (name.ToLower())
             {
+                case "hole":
+                    var hole = _world.CreateEntity()
+                        .AddComponent(new PositionComponent(worldMatrix, Matrix.CreateScale(scale * 2)))
+                        .AddComponent(new PrimitivePhysicsComponent(RigidBody.Box, RigidBodyFlags.Static));
+                    hole.GetComponent<PrimitivePhysicsComponent>().PhysicsLayer = PhysicsLayer.Trigger;
+                    HoleId = hole.Id;
+                    break;
                 case "box":
-                    var phyx = new PrimitivePhysicsComponent(RigidBody.Box, RigidBodyFlags.Static);
+                    phyx = new PrimitivePhysicsComponent(RigidBody.Box, RigidBodyFlags.Static);
                     _world.CreateEntity()
-                        .AddComponent(new PositionComponent(worldMatrix))
+                        .AddComponent(new PositionComponent(worldMatrix, Matrix.CreateScale(scale * 2)))
+                        .AddComponent(new MeshComponent("Models/Cube", "Shaders/GroundShader"))
                         .AddComponent(phyx);
-                    phyx.Restitution = 0.1f;
-                    phyx.StaticFriction = .9f;
-                    phyx.DynamicFriction = .2f;
                     break;
                 case "sphere":
+                    phyx = new PrimitivePhysicsComponent(RigidBody.Sphere, RigidBodyFlags.Static, scale.X);
                     _world.CreateEntity()
                         .AddComponent(new PositionComponent(worldMatrix))
-                        .AddComponent(new PrimitivePhysicsComponent(RigidBody.Sphere, RigidBodyFlags.Static, scale.Length()));
+                        //.AddComponent(new MeshComponent("Models/DebugSphere", "Shaders/GroundShader"))
+                        .AddComponent(phyx);
                     break;
                 case "player":
                     PlayerLocation = pos;

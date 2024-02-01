@@ -20,7 +20,7 @@ namespace Project1
         public GolfGame()
         {
             Content.RootDirectory = "Content";
-            IsMouseVisible = false;
+            IsMouseVisible = true;
 
             _world = new World(this, "Level1")
                 .AddSystem<Camera>()
@@ -34,21 +34,21 @@ namespace Project1
             var ent = _world.CreateEntity()
                     .AddComponent(new PositionComponent())
                     .AddComponent(new MeshComponent("models/sphere"))
-                    .AddComponent(new PrimitivePhysicsComponent(RigidBody.Sphere, RigidBodyFlags.Dynamic, .5f));
+                    .AddComponent(new PrimitivePhysicsComponent(RigidBody.Sphere, RigidBodyFlags.Dynamic, .08f, .5f));
             ent.Position.SetLocalMatrix(Matrix.CreateScale(.45f));
-            ent.GetComponent<PrimitivePhysicsComponent>().AngularDampening = .6f;
+            //my physics engine sucks, lots of dampening
+            // ent.GetComponent<PrimitivePhysicsComponent>().AngularDampening = 1f;
+            // ent.GetComponent<PrimitivePhysicsComponent>().LinearDampening = 0.6f;
 
             _world.AddSystem<WorldLoadingSystem>();
-            string file = Path.Combine(Content.RootDirectory, "worlds", "world1.txt");
-            var worldLoader = _world.GetSystem<WorldLoadingSystem>();
-            _world.GetSystem<WorldLoadingSystem>().LoadWorld(file);
-            ent.Position.SetWorldMatrix(Matrix.CreateTranslation(worldLoader.PlayerLocation));
 
 #if false
             _world.AddSystem<GolfingSystem>();
             _world.GetSystem<GolfingSystem>().SetPlayer(ent);
 #else
             _world.AddSystem<SpectatorMovement>();
+            var worldLoader = _world.GetSystem<WorldLoadingSystem>();
+            worldLoader.LoadWorld("worlds/world2.txt");
 #endif
 
         }

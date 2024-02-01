@@ -75,6 +75,7 @@ namespace Project1.Engine
             Id = -1;
             _components.Clear();
             _cachedPos = null;
+            World.RemoveEntity(Id);
         }
     }
 }

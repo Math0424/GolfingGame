@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,7 +13,7 @@ namespace Project1.Engine
     /// that can efficiently retrieve something by an index
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    internal class SparceIndexedList<T> where T : class
+    internal class SparceIndexedList<T> : IEnumerable<T> where T : class
     {
         private List<T> _contents;
         private List<int> _indexes;
@@ -56,8 +57,8 @@ namespace Project1.Engine
             }
             else
             {
-                _contents.Add(obj);
                 _indexes[index] = _contents.Count;
+                _contents.Add(obj);
             }
             Count++;
             return index;
@@ -81,6 +82,11 @@ namespace Project1.Engine
         }
 
         public IEnumerator<T> GetEnumerator()
+        {
+            return _contents.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
         {
             return _contents.GetEnumerator();
         }

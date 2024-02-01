@@ -84,10 +84,10 @@ namespace Project1.Engine.Systems
             if (Input.IsKeyDown(Keys.C))
                 m.Translation += _camera.Down * delta;
 
-            if (Input.IsNewMouseDown(Input.MouseButtons.LeftButton))
+            if (Input.IsNewMouseDown(Input.MouseButtons.RightButton))
             {
                 var ent = _world.CreateEntity()
-                    .AddComponent(new PositionComponent(_camera.WorldMatrix.Translation))
+                    .AddComponent(new PositionComponent(_camera.WorldMatrix.Translation + _camera.WorldMatrix.Forward * 5))
                     .AddComponent(new MeshComponent("models/sphere"))
                     .AddComponent(new PrimitivePhysicsComponent(RigidBody.Sphere, RigidBodyFlags.Dynamic));
                 ent.Position.SetLocalMatrix(Matrix.CreateScale(.75f));

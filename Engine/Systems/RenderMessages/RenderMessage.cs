@@ -13,12 +13,14 @@ namespace Project1.Engine.Systems.RenderMessages
 
         LoadMesh,
         LoadFont,
+        LoadEffect,
         LoadTexture,
 
         DrawSprite,
         DrawText,
 
         DrawMesh,
+        DrawMeshWithEffect,
         DrawLine,
         DrawQuad,
 

@@ -36,10 +36,12 @@ namespace Project1.Engine.Components
 
         private ModelInfo _info;
         private string _modelName;
+        private string _effect;
         private BoundingBox _AABB;
 
-        public MeshComponent(string modelname)
+        public MeshComponent(string modelname, string effect = null)
         {
+            _effect = effect;
             _modelName = modelname;
         }
 
@@ -72,6 +74,8 @@ namespace Project1.Engine.Components
 
         public override void Initalize()
         {
+            if (_effect != null)
+                _entity.World.Render.EnqueueMessage(new RenderMessageLoadEffect(_effect));
             _entity.World.Render.EnqueueMessage(new RenderMessageLoadMesh(_modelName));
             _entity.Position.UpdatedTransforms += UpdateAABB;
             SetModel(_modelName);
@@ -84,20 +88,17 @@ namespace Project1.Engine.Components
 
         public override bool IsVisible(ref Camera cam)
         {
-            // I want to cull everything behind the ViewMatrix, but something is wrong~
-            // float dist = Vector3.Dot(cam.WorldMatrix.Forward, _entity.Position.Position - ModelCenter) + Vector3.Dot(cam.Forward, cam.Translation);
-            // if (dist > -_info.Radius)
-            // {
-            //     Console.WriteLine($"Behind plane {dist} ({_info.Radius})");
-            //     return false;
-            // }
-
-            return cam.Frustum.Intersects(new BoundingSphere(_entity.Position.Position, _info.BoundingSphereRadius));
+            Matrix lm = _entity.Position.LocalMatrix;
+            float scale = Math.Max(lm.Forward.Length(), Math.Max(lm.Up.Length(), lm.Right.Length()));
+            return cam.Frustum.Intersects(new BoundingSphere(_entity.Position.Position, _info.BoundingSphereRadius * scale));
         }
 
         public override void Draw(RenderingSystem rendering, ref Camera cam)
         {
-            rendering.EnqueueMessage(new RenderMessageDrawMesh(_modelName, _entity.Position.TransformMatrix));
+            if (_effect != null)
+                rendering.EnqueueMessage(new RenderMessageDrawMeshWithEffect(_modelName, _entity.Position.TransformMatrix, _effect));
+            else
+                rendering.EnqueueMessage(new RenderMessageDrawMesh(_modelName, _entity.Position.TransformMatrix));
         }
 
         private void SetModel(string name)

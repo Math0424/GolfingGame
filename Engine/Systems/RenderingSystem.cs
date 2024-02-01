@@ -47,6 +47,8 @@ namespace Project1.Engine.Systems
             _meshes = new Dictionary<string, Model>();
             _fonts = new Dictionary<string, SpriteFont>();
             _textures = new Dictionary<string, Texture2D>();
+            _effects = new Dictionary<string, Effect>();
+
         }
 
         private void StopGraphics(object sender, EventArgs e)
@@ -74,10 +76,11 @@ namespace Project1.Engine.Systems
 
             _font = _world.Game.Content.Load<SpriteFont>("Fonts/Debug");
             EnqueueMessage(new RenderMessageLoadFont("Fonts/Debug"));
+            EnqueueMessage(new RenderMessageLoadMesh("Models/DebugSphere"));
 
             ScreenBounds = new Vector2(_graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height);
             Camera.SetupProjection(_graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height, 90);
-            //_camera.SetupOrthographic(_graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height);
+            //Camera.SetupOrthographic(_graphicsDevice.Viewport.Width / 20, _graphicsDevice.Viewport.Height / 20, -50, 50);
         }
 
         // TODO move draw to a different thread away from the main gameloop
@@ -143,6 +146,7 @@ namespace Project1.Engine.Systems
         private Dictionary<string, Model> _meshes;
         private Dictionary<string, Texture2D> _textures;
         private Dictionary<string, SpriteFont> _fonts;
+        private Dictionary<string, Effect> _effects;
 
         private static VertexPositionTexture[] _quadVertexPositionTexture = new[]
         {
@@ -199,11 +203,31 @@ namespace Project1.Engine.Systems
                         var loadTexture = (RenderMessageLoadTexture)message;
                         _textures[loadTexture.Texture] = _game.Content.Load<Texture2D>(loadTexture.Texture);
                         break;
+                    case RenderMessageType.LoadEffect:
+                        var loadEffect = (RenderMessageLoadEffect)message;
+                        _effects[loadEffect.Effect] = _game.Content.Load<Effect>(loadEffect.Effect);
+                        break;
                     case RenderMessageType.DrawMesh:
                         var drawMesh = (RenderMessageDrawMesh)message;
                         _basicEffect.VertexColorEnabled = false;
                         _basicEffect.TextureEnabled = true;
                         _meshes[drawMesh.Model].Draw(drawMesh.Matrix, Camera.ViewMatrix, Camera.ProjectionMatrix);
+                        break;
+                    case RenderMessageType.DrawMeshWithEffect:
+                        var drawEffectMesh = (RenderMessageDrawMeshWithEffect)message;
+                        var effect = _effects[drawEffectMesh.Effect];
+                        foreach(ModelMesh mesh in _meshes[drawEffectMesh.Model].Meshes)
+                        {
+                            foreach(ModelMeshPart part in mesh.MeshParts)
+                            {
+                                part.Effect = effect;
+                                effect.Parameters["World"].SetValue(drawEffectMesh.Matrix * mesh.ParentBone.Transform);
+                                effect.Parameters["CameraPos"].SetValue(Camera.WorldMatrix.Translation);
+                                effect.Parameters["View"].SetValue(Camera.ViewMatrix);
+                                effect.Parameters["Projection"].SetValue(Camera.ProjectionMatrix);
+                            }
+                            mesh.Draw();
+                        }
                         break;
                     case RenderMessageType.DrawLine:
                         var drawLine = (RenderMessageDrawLine)message;
@@ -236,6 +260,17 @@ namespace Project1.Engine.Systems
                         _basicEffect.World = drawBox.Matrix;
                         _basicEffect.CurrentTechnique.Passes[0].Apply();
                         _graphicsDevice.DrawUserIndexedPrimitives(PrimitiveType.LineList, _boxVertexPosition, 0, 8, _boxVertexIndices, 0, 12);
+                        break;
+                    case RenderMessageType.DrawSphere:
+                        var drawSphere = (RenderMessageDrawSphere)message;
+                        _basicEffect.VertexColorEnabled = true;
+                        _basicEffect.TextureEnabled = false;
+                        _basicEffect.CurrentTechnique.Passes[0].Apply();
+                        Matrix translate = Matrix.CreateScale(drawSphere.Radius * 2) * Matrix.CreateTranslation(drawSphere.Pos);
+                        var prevState = _graphicsDevice.RasterizerState;
+                        _graphicsDevice.RasterizerState = new RasterizerState { FillMode = FillMode.WireFrame };
+                        _meshes["Models/DebugSphere"].Draw(translate, Camera.ViewMatrix, Camera.ProjectionMatrix);
+                        _graphicsDevice.RasterizerState = prevState;
                         break;
                 }
             }
