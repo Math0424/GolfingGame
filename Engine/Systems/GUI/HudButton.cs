@@ -13,7 +13,8 @@ namespace Project1.Engine.Systems.GUI
         public Color PressedColor;
 
         public Action<object> OnHovered;
-        public Action<object> OnClicked;
+        public Action<object> OnRightClicked;
+        public Action<object> OnLeftClicked;
 
         protected bool _isHovered;
         protected bool _isPressed;
@@ -36,13 +37,21 @@ namespace Project1.Engine.Systems.GUI
                 }
 
                 _isHovered = true;
-                if (Input.IsNewMouseDown(Input.MouseButtons.LeftButton))
+                if (Input.IsNewMouseDown(Input.MouseButtons.LeftButton) || Input.IsNewMouseDown(Input.MouseButtons.RightButton))
                     _isPressed = true;
 
-                if (_isPressed && Input.IsNewMouseUp(Input.MouseButtons.LeftButton))
+                if (_isPressed)
                 {
-                    _isPressed = false;
-                    OnClicked?.Invoke(this);
+                    if (Input.IsNewMouseUp(Input.MouseButtons.LeftButton))
+                    {
+                        OnLeftClicked?.Invoke(this);
+                        _isPressed = false;
+                    }
+                    else if(Input.IsNewMouseUp(Input.MouseButtons.RightButton))
+                    {
+                        OnRightClicked?.Invoke(this);
+                        _isPressed = false;
+                    }
                 }
             }
             else

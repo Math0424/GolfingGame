@@ -26,8 +26,7 @@ namespace Project1.Engine.Components
 
         public override void Draw(RenderingSystem system, ref Camera cam)
         {
-            var pos = _entity.Position.Position;
-            var newPos = cam.WorldToScreen(ref pos);
+            var newPos = cam.WorldToScreen(_entity.Position.Position);
             float depth = Vector3.DistanceSquared(_entity.Position.Position, cam.Translation);
             Rectangle r = new Rectangle((int)newPos.X, (int)newPos.Y, (int)(30 * (1 - newPos.Z)), (int)(30 * (1 - newPos.Z)));
             system.EnqueueMessage(new RenderMessageDrawSprite(_assetName, r, depth));

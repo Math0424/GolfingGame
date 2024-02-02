@@ -28,7 +28,10 @@ namespace Project1.Engine.Systems.GUI
         {
             _game = game;
             _render = render;
-            _render.OnGraphicsReady += GraphicInit;
+            if (!_render.GraphicsReady)
+                _render.OnGraphicsReady += GraphicInit;
+            else
+                GraphicInit();
         }
 
         private void GraphicInit()

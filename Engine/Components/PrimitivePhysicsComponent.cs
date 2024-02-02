@@ -32,6 +32,7 @@ namespace Project1.Engine.Components
         private Vector3 _prevPosition;
 
         public PhysicsLayer PhysicsLayer;
+        public bool IsEnabled;
         public bool IsSleeping { get; private set; }
         public int EntityId => _entity.Id;
 
@@ -64,6 +65,7 @@ namespace Project1.Engine.Components
             _userRadius = radius;
             _velocities = new float[100];
             IsSleeping = true;
+            IsEnabled = true;
         }
 
         public override void Initalize()
@@ -85,6 +87,9 @@ namespace Project1.Engine.Components
 
         public void Update(float deltaTime)
         {
+            if (!IsEnabled)
+                return;
+
             if (RigidBody.RigidBodyFlags == RigidBodyFlags.Static)
             {
                 Stop();

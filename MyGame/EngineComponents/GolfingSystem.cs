@@ -41,7 +41,7 @@ namespace Project1.MyGame
             _world = world;
             _cam.SetWorldMatrix(Matrix.CreateRotationX(-MathHelper.PiOver2));
 
-            float aspectRatio = render.ScreenBounds.X / render.ScreenBounds.Y;
+            int aspectRatio = render.ScreenBounds.X / render.ScreenBounds.Y;
             _cam.SetupOrthographic(aspectRatio * 15, 15, -50f, 50f);
 
             LoadWorld(_worldId);

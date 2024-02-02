@@ -82,6 +82,7 @@ namespace Project1.MyGame
 
         protected override void Dispose(bool disposing)
         {
+            _game.Components.Remove(_world);
             _world.Dispose();
             base.Dispose(disposing);
         }

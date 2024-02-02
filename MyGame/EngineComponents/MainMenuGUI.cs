@@ -26,7 +26,7 @@ namespace Project1.MyGame
         public MainMenuGUI(HudRoot root, string[] levels) : base(root)
         {
             Visible = true;
-            _playerCount = 0;
+            _playerCount = 1;
 
             _sourceCodeBtn = new HudTextButton(this)
             {
@@ -35,7 +35,7 @@ namespace Project1.MyGame
                 Text = "Source Code",
                 ParentAlignment = ParentAlignments.Left | ParentAlignments.Bottom | ParentAlignments.Inner | ParentAlignments.Padding
             };
-            _sourceCodeBtn.OnClicked += (e) => { Process.Start("explorer", "https://github.com/Math0424/GolfingGame"); };
+            _sourceCodeBtn.OnLeftClicked += (e) => { Process.Start("explorer", "https://github.com/Math0424/GolfingGame"); };
 
             _startGameBtn = new HudTextButton(_sourceCodeBtn)
             {
@@ -44,9 +44,9 @@ namespace Project1.MyGame
                 Bounds = new Vector2I(200, 50),
                 ParentAlignment = ParentAlignments.Top | ParentAlignments.Padding
             };
-            _startGameBtn.OnClicked += (e) =>
+            _startGameBtn.OnLeftClicked += (e) =>
             {
-                StartGame?.Invoke(null, _playerCount + 1);
+                StartGame?.Invoke(null, _playerCount);
             };
             
             _levelSelectBtn = new HudTextButton(this)
@@ -56,7 +56,7 @@ namespace Project1.MyGame
                 Bounds = new Vector2I(200, 50),
                 ParentAlignment = ParentAlignments.Right | ParentAlignments.Bottom | ParentAlignments.Inner | ParentAlignments.Padding
             };
-            _levelSelectBtn.OnClicked += (e) =>
+            _levelSelectBtn.OnLeftClicked += (e) =>
             {
                 foreach(var x in _levelSelectBtns)
                     x.Visible = !x.Visible;
@@ -74,24 +74,28 @@ namespace Project1.MyGame
                     ParentAlignment = ParentAlignments.Top | ParentAlignments.Right | ParentAlignments.InnerH | ParentAlignments.Padding,
                 };
                 _levelSelectBtns[i].Position -= new Vector2I(0, i * 50);
-                _levelSelectBtns[i].OnClicked += (e) =>
+                _levelSelectBtns[i].OnLeftClicked += (e) =>
                 {
-                    StartGame?.Invoke(((HudTextButton)e).Text, _playerCount + 1);
+                    StartGame?.Invoke(((HudTextButton)e).Text, _playerCount);
                 };
             }
 
             _playerModeBtn = new HudTextButton(this)
             {
                 Padding = 20,
-                Text = $"{_playerCount + 1} Player Mode",
+                Text = $"{_playerCount} Player(s)",
                 Bounds = new Vector2I(200, 50),
                 ParentAlignment = ParentAlignments.Left | ParentAlignments.Top | ParentAlignments.Inner | ParentAlignments.Padding
             };
-            _playerModeBtn.OnClicked += (e) => {
-                _playerCount = (_playerCount + 1) % 2;
-                _playerModeBtn.Text = $"{_playerCount + 1} Player Mode";
+            _playerModeBtn.OnLeftClicked += (e) => {
+                _playerCount += 1;
+                _playerModeBtn.Text = $"{_playerCount} Player(s)";
+            }; 
+            _playerModeBtn.OnRightClicked += (e) => {
+                _playerCount = Math.Max(1, _playerCount - 1);
+                _playerModeBtn.Text = $"{_playerCount} Player(s)";
             };
-            
+
         }
     }
 }

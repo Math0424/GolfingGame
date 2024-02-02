@@ -25,13 +25,13 @@ namespace Project1.Engine
             DrawLine(render, matrix.Translation, Vector3.Normalize(matrix.Forward), Color.Blue);
         }
 
-        public static void DrawWorldText(RenderingSystem graphics, string text, Vector3 worldPos, Color color)
+        public static void DrawWorldText(RenderingSystem graphics, string text, Vector3 worldPos, Color color, TextDrawOptions options = TextDrawOptions.Default)
         {
             if (Vector3.Dot(graphics.Camera.Forward, graphics.Camera.Translation - worldPos) > .5f)
                 return;
             
-            Vector3 screen = graphics.Camera.WorldToScreen(ref worldPos);
-            graphics.EnqueueMessage(new RenderMessageDrawText("Fonts/Debug", text, 12, 1 / screen.Z, new Vector2(screen.X, screen.Y), color));
+            Vector3 screen = graphics.Camera.WorldToScreen(worldPos);
+            graphics.EnqueueMessage(new RenderMessageDrawText("Fonts/Debug", text, 12, 1 / screen.Z, new Vector2(screen.X, screen.Y), color, options));
         }
 
     }

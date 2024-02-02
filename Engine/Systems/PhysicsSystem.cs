@@ -79,12 +79,13 @@ namespace Project1.Engine.Systems
                     if (t.EntityId == -1 ||
                         t.PhysicsLayer == PhysicsLayer.Trigger || 
                         t.RigidBody.RigidBodyFlags != RigidBodyFlags.Dynamic || 
-                        t.IsSleeping)
+                        t.IsSleeping || 
+                        !t.IsEnabled)
                         continue;
                     
                     foreach (var c in physicsObjects)
                     {
-                        if (c.EntityId != -1 && t != c) //&& Vector3.Distance(target.RigidBody.WorldMatrix.Translation, contact.RigidBody.WorldMatrix.Translation) <= target.RigidBody.BoundingSphere + contact.RigidBody.BoundingSphere)
+                        if (c.EntityId != -1 && c.IsEnabled && t != c) //&& Vector3.Distance(target.RigidBody.WorldMatrix.Translation, contact.RigidBody.WorldMatrix.Translation) <= target.RigidBody.BoundingSphere + contact.RigidBody.BoundingSphere)
                         {
                             Collision col;
                             CollisionSolver.Solve(t, c, out col);

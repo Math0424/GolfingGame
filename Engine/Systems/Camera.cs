@@ -35,6 +35,8 @@ namespace Project1.Engine.Systems
         public Vector3 Down => _worldMatrix.Down;
         public Vector3 Translation => _worldMatrix.Translation;
 
+        private bool _isOrthographic;
+
         public Camera()
         {
             _height = 480;
@@ -47,6 +49,7 @@ namespace Project1.Engine.Systems
 
         public Camera SetupProjection(int width, int height, float FOV)
         {
+            _isOrthographic = false;
             _aspectRatio = (float)width / height;
             this._height = height;
             this._width = width;
@@ -64,6 +67,7 @@ namespace Project1.Engine.Systems
 
         public Camera SetupOrthographic(float width, float height, float nearPlane, float farPlane)
         {
+            _isOrthographic = true;
             _nearPlane = nearPlane;
             _farPlane = farPlane;
             _projectionMatrix = Matrix.CreateOrthographic(width, height, _nearPlane, _farPlane);
@@ -101,7 +105,7 @@ namespace Project1.Engine.Systems
             SetupProjection(_width, _height, Math.Clamp(fov, 1, 179));
         }
 
-        public Vector3 WorldToScreen(ref Vector3 worldPos)
+        public Vector3 WorldToScreen(Vector3 worldPos)
         {
             var pos = Vector4.Transform(new Vector4(worldPos, 1), _worldToScreen);
             pos.X /= pos.W;

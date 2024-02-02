@@ -21,6 +21,8 @@ namespace Project1
         public GolfGame()
         {
             Content.RootDirectory = "Content";
+            //Window.AllowUserResizing = true;
+
             IsMouseVisible = true;
             LoadMainMenu();
         }
@@ -36,14 +38,19 @@ namespace Project1
         {
             Components.Remove(_mainMenu);
             _mainMenu.Dispose();
+            _mainMenu = null;
 
             _golfGame = new GolfingGameXNAComponent(this, worldName, playerCount);
             Components.Add(_golfGame);
+            _golfGame.InvokeMainMenu += LoadIntoMainMenu;
         }
 
         public void LoadIntoMainMenu()
         {
             _golfGame.Dispose();
+            Components.Remove(_golfGame);
+            _golfGame = null;
+
             LoadMainMenu();
         }
 
@@ -67,7 +74,7 @@ namespace Project1
 
         protected override void Update(GameTime gameTime)
         {
-            if (Input.IsKeyDown(Keys.F1))
+            if (_golfGame == null && Input.IsNewKeyDown(Keys.Escape))
                 Exit();
 
             base.Update(gameTime);

@@ -14,27 +14,44 @@ namespace Project1.MyGame
     {
 
         public int Strokes { get; private set; }
-        public bool IsActive;
+        public bool TurnComplete { get; private set; }
+        public bool IsActive
+        {
+            get => _isActive;
+            set
+            {
+                _isActive = value;
+                _hasStroked = false;
+                TurnComplete = false;
+            }
+        }
+        
         private Vector3 _resetPos;
         private float _killLevel;
         private Vector2 _mouseDragStart;
+        private bool _hasStroked;
+        private bool _isActive;
+        private string _name;
+        private Color _color;
 
-        public EntityGolfingComponent(Vector3 resetPos, float killLevel)
+        public EntityGolfingComponent(Vector3 resetPos, float killLevel, string name, Color color)
         {
+            _color = color;
+            _name = name;
             _resetPos = resetPos;
             _killLevel = killLevel;
-        }
-
-        public virtual void Initalize()
-        {
-
+            IsActive = false;
         }
 
         public override void Update(GameTime deltaTime)
         {
-            var physics = _entity.GetComponent<PrimitivePhysicsComponent>();
-
             var camera = _entity.World.Render.Camera;
+            DrawingUtils.DrawWorldText(_entity.World.Render, _name, _entity.Position.Position + camera.Up, _color, TextDrawOptions.Centered);
+
+            if (!IsActive)
+                return;
+
+            var physics = _entity.GetComponent<PrimitivePhysicsComponent>();
 
             var matrix = camera.WorldMatrix;
             matrix.Translation = _entity.Position.Position;
@@ -49,6 +66,14 @@ namespace Project1.MyGame
 
             if (physics.IsSleeping)
             {
+                if (_hasStroked)
+                {
+                    IsActive = false;
+                    TurnComplete = true;
+                    _hasStroked = false;
+                    return;
+                }
+
                 if (Input.IsNewMouseDown(Input.MouseButtons.LeftButton))
                     _mouseDragStart = Input.MousePosition();
 
@@ -57,6 +82,7 @@ namespace Project1.MyGame
                     Vector2 deltaMouse = Input.MousePosition() - _mouseDragStart;
                     Vector3 val = -new Vector3(deltaMouse.X, 0, deltaMouse.Y) / 100;
                     physics.AddForce(val);
+                    _hasStroked = true;
                     Strokes++;
                 }
 

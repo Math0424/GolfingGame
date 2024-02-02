@@ -139,13 +139,13 @@ namespace Project1.Engine
                     GameFocused?.Invoke();
             }
 
-            foreach (var x in _systems.Values)
-                x.Update(deltaTime);
-
             var entUpdates = GetEntityComponents<EntityUpdateComponent>();
             if (entUpdates != null)
-                foreach(var x in GetEntityComponents<EntityUpdateComponent>())
+                foreach (var x in GetEntityComponents<EntityUpdateComponent>())
                     x.Update(deltaTime);
+
+            foreach (var x in _systems.Values)
+                x.Update(deltaTime);
         }
 
         public void Draw(GameTime deltaTime)

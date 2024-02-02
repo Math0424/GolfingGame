@@ -17,11 +17,11 @@ namespace Project1.Engine.Systems
         public static GraphicsDeviceManager _graphics;
 
         public Camera Camera { get; private set; }
-        public Vector2 ScreenBounds { get; private set; }
+        public Vector2I ScreenBounds { get; private set; }
         public Action DoDraw;
         public Action OnGraphicsReady;
+        public bool GraphicsReady;
 
-        private bool _graphicsReady;
         private GraphicsDevice _graphicsDevice;
         private BasicEffect _basicEffect;
         private SpriteFont _font;
@@ -42,7 +42,7 @@ namespace Project1.Engine.Systems
             Camera = camera;
             _world = world;
 
-            _graphicsReady = false;
+            GraphicsReady = false;
             _renderMessages = new List<RenderMessage>();
             _meshes = new Dictionary<string, Model>();
             _fonts = new Dictionary<string, SpriteFont>();
@@ -53,6 +53,8 @@ namespace Project1.Engine.Systems
             {
                 _graphics = new GraphicsDeviceManager(game);
                 _graphics.DeviceCreated += GraphicInit;
+                _graphics.PreferredBackBufferHeight = 800;
+                _graphics.PreferredBackBufferWidth = 800;
             } 
             else
                 GraphicInit(_graphics, null);
@@ -82,18 +84,18 @@ namespace Project1.Engine.Systems
             EnqueueMessage(new RenderMessageLoadFont("Fonts/Debug"));
             EnqueueMessage(new RenderMessageLoadMesh("Models/DebugSphere"));
 
-            ScreenBounds = new Vector2(_graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height);
+            ScreenBounds = new Vector2I(_graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height);
             Camera.SetupProjection(_graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height, 90);
             //Camera.SetupOrthographic(_graphicsDevice.Viewport.Width / 20, _graphicsDevice.Viewport.Height / 20, -50, 50);
 
-            _graphicsReady = true;
+            GraphicsReady = true;
             OnGraphicsReady?.Invoke();
         }
 
         // TODO move draw to a different thread away from the main gameloop
         public void Draw(GameTime delta)
         {
-            if (!_graphicsReady)
+            if (!GraphicsReady)
                 return;
 
             long timeNow = DateTime.Now.Ticks;
