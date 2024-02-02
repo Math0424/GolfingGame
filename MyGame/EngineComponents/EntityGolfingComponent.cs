@@ -23,21 +23,23 @@ namespace Project1.MyGame
                 _isActive = value;
                 _hasStroked = false;
                 TurnComplete = false;
+                if (value)
+                    _entity.GetComponent<PrimitivePhysicsComponent>().Wake();
             }
         }
+        public string Name { get; private set; }
         
         private Vector3 _resetPos;
         private float _killLevel;
         private Vector2 _mouseDragStart;
         private bool _hasStroked;
         private bool _isActive;
-        private string _name;
         private Color _color;
 
         public EntityGolfingComponent(Vector3 resetPos, float killLevel, string name, Color color)
         {
             _color = color;
-            _name = name;
+            Name = name;
             _resetPos = resetPos;
             _killLevel = killLevel;
             IsActive = false;
@@ -46,12 +48,14 @@ namespace Project1.MyGame
         public override void Update(GameTime deltaTime)
         {
             var camera = _entity.World.Render.Camera;
-            DrawingUtils.DrawWorldText(_entity.World.Render, _name, _entity.Position.Position + camera.Up, _color, TextDrawOptions.Centered);
+            var physics = _entity.GetComponent<PrimitivePhysicsComponent>();
 
             if (!IsActive)
+            {
+                DrawingUtils.DrawWorldText(_entity.World.Render, $"{Name}\n{Strokes} strokes", _entity.Position.Position + camera.Up, _color, TextDrawOptions.Centered);
                 return;
+            }
 
-            var physics = _entity.GetComponent<PrimitivePhysicsComponent>();
 
             var matrix = camera.WorldMatrix;
             matrix.Translation = _entity.Position.Position;
@@ -74,27 +78,38 @@ namespace Project1.MyGame
                     return;
                 }
 
+                if (_mouseDragStart == Vector2.Zero)
+                {
+                    Vector3 screen = _entity.World.Render.Camera.WorldToScreen(_entity.Position.Position);
+                    Rectangle rect = new Rectangle((int)screen.X - 50, (int)screen.Y - 50, 100, 100);
+                    _entity.World.Render.EnqueueMessage(new RenderMessageDrawColoredSprite("Textures/GUI/circle", rect, 0, _color));
+                }
+
                 if (Input.IsNewMouseDown(Input.MouseButtons.LeftButton))
                     _mouseDragStart = Input.MousePosition();
 
-                if (Input.IsNewMouseUp(Input.MouseButtons.LeftButton))
+                if (_mouseDragStart != Vector2.Zero)
                 {
-                    Vector2 deltaMouse = Input.MousePosition() - _mouseDragStart;
-                    Vector3 val = -new Vector3(deltaMouse.X, 0, deltaMouse.Y) / 100;
-                    physics.AddForce(val);
-                    _hasStroked = true;
-                    Strokes++;
-                }
+                    if (Input.IsNewMouseUp(Input.MouseButtons.LeftButton))
+                    {
+                        Vector2 deltaMouse = Input.MousePosition() - _mouseDragStart;
+                        Vector3 val = -new Vector3(deltaMouse.X, 0, deltaMouse.Y) / 100;
+                        physics.AddForce(val);
+                        _hasStroked = true;
+                        _mouseDragStart = Vector2.Zero;
+                        Strokes++;
+                    }
 
-                if (Input.IsMouseDown(Input.MouseButtons.LeftButton))
-                {
-                    _entity.World.Game.IsMouseVisible = false;
-                    Vector2 deltaMouse = Input.MousePosition() - _mouseDragStart;
-                    Vector3 val = new Vector3(deltaMouse.X, 0, deltaMouse.Y);
-                    _entity.World.Render.EnqueueMessage(new RenderMessageDrawLine(_entity.Position.Position, _entity.Position.Position + val / 10, Color.Red));
+                    if (Input.IsMouseDown(Input.MouseButtons.LeftButton))
+                    {
+                        _entity.World.Game.IsMouseVisible = false;
+                        Vector2 deltaMouse = Input.MousePosition() - _mouseDragStart;
+                        Vector3 val = new Vector3(deltaMouse.X, 0, deltaMouse.Y);
+                        _entity.World.Render.EnqueueMessage(new RenderMessageDrawLine(_entity.Position.Position, _entity.Position.Position + val / 10, Color.Red));
+                    }
+                    else
+                        _entity.World.Game.IsMouseVisible = true;
                 }
-                else
-                    _entity.World.Game.IsMouseVisible = true;
             }
 
         }

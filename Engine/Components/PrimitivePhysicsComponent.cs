@@ -81,6 +81,7 @@ namespace Project1.Engine.Components
         {
             if (RigidBody.RigidBodyFlags == RigidBodyFlags.Static)
                 return;
+            IsSleeping = false;
             for (int i = 0; i < _velocities.Length; i++)
                 _velocities[i] = 1;
         }

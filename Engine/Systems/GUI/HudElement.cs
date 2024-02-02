@@ -69,6 +69,7 @@ namespace Project1.Engine.Systems.GUI
         {
             _core = parent._core;
             _classParent = parent;
+            ParentAlignment = ParentAlignments.Center;
             zOffset = parent.zOffset - 1;
             Setup();
         }
@@ -103,29 +104,29 @@ namespace Project1.Engine.Systems.GUI
                 return;
             }
 
-            int innerV = _parentAlignments.HasFlag(ParentAlignments.InnerV) ? -1 : 1;
-            int innerH = _parentAlignments.HasFlag(ParentAlignments.InnerH) ? -1 : 1;
+            int innerV = (_parentAlignments & ParentAlignments.InnerV) == ParentAlignments.InnerV ? -1 : 1;
+            int innerH = (_parentAlignments & ParentAlignments.InnerH) == ParentAlignments.InnerH ? -1 : 1;
             int padding = _parentAlignments.HasFlag(ParentAlignments.Padding) ? Padding : 0;
 
             if (_parentAlignments.HasFlag(ParentAlignments.Top))
             {
-                newPos.Y = Parent.PositionRef.Y - (_classParent.Bounds.Y / 2) - padding * innerV;
-                newPos.Y -= (Bounds.Y / 2) * innerV;
+                newPos.Y = Parent.PositionRef.Y - (_classParent.Bounds.Y / 2) - padding * innerH;
+                newPos.Y -= (Bounds.Y / 2) * innerH;
             }
             if (_parentAlignments.HasFlag(ParentAlignments.Bottom))
             {
-                newPos.Y = Parent.PositionRef.Y + (_classParent.Bounds.Y / 2) + padding * innerV;
-                newPos.Y += (Bounds.Y / 2) * innerV;
+                newPos.Y = Parent.PositionRef.Y + (_classParent.Bounds.Y / 2) + padding * innerH;
+                newPos.Y += (Bounds.Y / 2) * innerH;
             }
             if (_parentAlignments.HasFlag(ParentAlignments.Left))
             {
-                newPos.X = Parent.PositionRef.X - (_classParent.Bounds.X / 2) - padding * innerH;
-                newPos.X -= (Bounds.X / 2) * innerH;
+                newPos.X = Parent.PositionRef.X - (_classParent.Bounds.X / 2) - padding * innerV;
+                newPos.X -= (Bounds.X / 2) * innerV;
             }
             if (_parentAlignments.HasFlag(ParentAlignments.Right))
             {
-                newPos.X = Parent.PositionRef.X + (_classParent.Bounds.X / 2) + padding * innerH;
-                newPos.X += (Bounds.X / 2) * innerH;
+                newPos.X = Parent.PositionRef.X + (_classParent.Bounds.X / 2) + padding * innerV;
+                newPos.X += (Bounds.X / 2) * innerV;
             }
             Position = newPos;
         }

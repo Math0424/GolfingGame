@@ -30,8 +30,8 @@ namespace Project1
         public void LoadMainMenu()
         {
             _mainMenu = new MainMenuXNAComponent(this);
-            Components.Add(_mainMenu);
             _mainMenu.StartGame += LoadIntoGame;
+            Components.Add(_mainMenu);
         }
 
         public void LoadIntoGame(string worldName, int playerCount)
@@ -41,10 +41,10 @@ namespace Project1
             _mainMenu = null;
 
             _golfGame = new GolfingGameXNAComponent(this, worldName, playerCount);
-            Components.Add(_golfGame);
             _golfGame.InvokeMainMenu += LoadIntoMainMenu;
+            Components.Add(_golfGame);
         }
-
+        
         public void LoadIntoMainMenu()
         {
             _golfGame.Dispose();
@@ -52,24 +52,6 @@ namespace Project1
             _golfGame = null;
 
             LoadMainMenu();
-        }
-
-        protected override void LoadContent()
-        {
-            //var ent = _world.CreateEntity()
-            //        .AddComponent(new PositionComponent())
-            //        .AddComponent(new MeshComponent("models/sphere"))
-            //        .AddComponent(new PrimitivePhysicsComponent(RigidBody.Sphere, RigidBodyFlags.Dynamic, .08f, .5f));
-            //ent.Position.SetLocalMatrix(Matrix.CreateScale(.40f));
-            //_world.AddSystem<WorldLoadingSystem>();
-#if false
-            _world.AddSystem<GolfingSystem>();
-            _world.GetSystem<GolfingSystem>().SetPlayer(ent);
-#else
-            //_world.AddSystem<SpectatorMovement>();
-            //var worldLoader = _world.GetSystem<WorldLoadingSystem>();
-            //worldLoader.LoadWorld("worlds/world2.txt");
-#endif
         }
 
         protected override void Update(GameTime gameTime)

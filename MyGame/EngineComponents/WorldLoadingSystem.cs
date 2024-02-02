@@ -69,11 +69,11 @@ namespace Project1.MyGame
                         .AddComponent(phyx);
                     break;
                 case "sphere":
-                    phyx = new PrimitivePhysicsComponent(RigidBody.Sphere, RigidBodyFlags.Static, scale.X);
-                    _world.CreateEntity()
-                        .AddComponent(new PositionComponent(worldMatrix))
-                        //.AddComponent(new MeshComponent("Models/DebugSphere", "Shaders/GroundShader"))
-                        .AddComponent(phyx);
+                    // phyx = new PrimitivePhysicsComponent(RigidBody.Sphere, RigidBodyFlags.Static, scale.X);
+                    // _world.CreateEntity()
+                    //     .AddComponent(new PositionComponent(worldMatrix))
+                    //     //.AddComponent(new MeshComponent("Models/DebugSphere", "Shaders/GroundShader"))
+                    //     .AddComponent(phyx);
                     break;
                 case "player":
                     PlayerLocation = pos;
