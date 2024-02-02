@@ -50,9 +50,13 @@ namespace Project1.Engine.Components
         public RigidBody RigidBody { get; private set; }
 
         /// <summary>
-        /// Entity collided with (int)[entity] at (Vector3)[position]
+        /// Entity intersecting with [entity] at [position]
         /// </summary>
-        public Action<int, Vector3> Collision;
+        public Action<int, Vector3> Intersecting;
+        /// <summary>
+        /// Entity collided with [entity] at [position] [velocity] [normal] with [force]
+        /// </summary>
+        public Action<int, Vector3, Vector3, Vector3, float> Collision;
 
         public PrimitivePhysicsComponent(RigidBody collider, RigidBodyFlags flags, float mass = 1, float radius = -1)
         {

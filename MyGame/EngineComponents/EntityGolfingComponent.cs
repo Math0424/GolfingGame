@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Project1.Engine;
 using Project1.Engine.Components;
+using Project1.Engine.Systems;
 using Project1.Engine.Systems.RenderMessages;
 using System;
 using System.Collections.Generic;
@@ -97,6 +98,7 @@ namespace Project1.MyGame
                         physics.AddForce(val);
                         _hasStroked = true;
                         _mouseDragStart = Vector2.Zero;
+                        _entity.World.GetSystem<SoundSystem>().PlaySoundEffect("Audio/hit_ball");
                         Strokes++;
                     }
 

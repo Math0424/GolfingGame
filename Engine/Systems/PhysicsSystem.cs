@@ -91,8 +91,8 @@ namespace Project1.Engine.Systems
                             CollisionSolver.Solve(t, c, out col);
                             if (col.Containment == ContainmentType.Intersects)
                             {
-                                t.Collision?.Invoke(c.EntityId, col.PositionWorld);
-                                c.Collision?.Invoke(t.EntityId, col.PositionWorld);
+                                t.Intersecting?.Invoke(c.EntityId, col.PositionWorld);
+                                c.Intersecting?.Invoke(t.EntityId, col.PositionWorld);
                                 if (c.PhysicsLayer == PhysicsLayer.Trigger)
                                     continue;
 
@@ -152,6 +152,7 @@ namespace Project1.Engine.Systems
                                     t.AddTorque(angularVelChanget);
                                 }
 
+                                t.Collision?.Invoke(c.EntityId, col.PositionWorld, surfaceVel, col.Normal, -Jmod);
 
                                 // Friction code
 

@@ -13,6 +13,24 @@
 
 #---------------------------------- Content ---------------------------------#
 
+#begin Audio/enter_hole.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/enter_hole.wav
+
+#begin Audio/hit_ball.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/hit_ball.wav
+
+#begin Audio/hit_wall.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/hit_wall.wav
+
 #begin Fonts/Debug.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor

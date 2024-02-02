@@ -56,6 +56,7 @@ namespace Project1.MyGame
                 .AddSystem<Camera>()
                 .AddSystem<RenderingSystem>()
                 .AddSystem<PhysicsSystem>()
+                .AddSystem<SoundSystem>()
                 .AddSystem<WorldLoadingSystem>()
                 .AddSystem<HudSystem>();
             _game.Components.Add(_world);
@@ -99,7 +100,7 @@ namespace Project1.MyGame
             var worldLoader = _world.GetSystem<WorldLoadingSystem>();
             worldLoader.LoadWorld(_worlds[_currentWorld]);
 
-            _world.GetEntity(worldLoader.HoleId).GetComponent<PrimitivePhysicsComponent>().Collision += HoleCollision;
+            _world.GetEntity(worldLoader.HoleId).GetComponent<PrimitivePhysicsComponent>().Intersecting += HoleCollision;
 
             _players = new Entity[_playerCount];
             _playersRemain = _playerCount;
@@ -111,9 +112,17 @@ namespace Project1.MyGame
                     .AddComponent(new EntityGolfingComponent(worldLoader.PlayerLocation, worldLoader.KillLevel.Y, $"Player {i+1}", _playerColors[i % _playerColors.Length]))
                     .AddComponent(new PrimitivePhysicsComponent(RigidBody.Sphere, RigidBodyFlags.Dynamic, .08f, .5f));
                 _players[i].Position.SetLocalMatrix(Matrix.CreateScale(.40f));
-                _players[i].GetComponent<PrimitivePhysicsComponent>().IsEnabled = false;
+                var phyx = _players[i].GetComponent<PrimitivePhysicsComponent>();
+                phyx.IsEnabled = false;
+                phyx.Collision += ImpactSound;
             }
             ActivateCurrentPlayer();
+        }
+
+        public void ImpactSound(int ent, Vector3 pos, Vector3 velocity, Vector3 normal, float J)
+        {
+            if (J > .15f)
+                _world.GetSystem<SoundSystem>().PlaySoundEffect("Audio/hit_wall");
         }
 
         private void ActivateCurrentPlayer()
@@ -152,6 +161,7 @@ namespace Project1.MyGame
                     {
                         _currentPlayerToGolf++;
                         ActivateCurrentPlayer();
+                        _world.GetSystem<SoundSystem>().PlaySoundEffect("Audio/enter_hole");
                     }
                     break;
                 }
