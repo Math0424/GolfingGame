@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿#define SPECTATOR2
+
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Project1.Engine;
 using Project1.Engine.Components;
@@ -58,6 +60,9 @@ namespace Project1.MyGame
                 .AddSystem<PhysicsSystem>()
                 .AddSystem<SoundSystem>()
                 .AddSystem<WorldLoadingSystem>()
+#if SPECTATOR
+                .AddSystem<SpectatorMovement>()
+#endif
                 .AddSystem<HudSystem>();
             _game.Components.Add(_world);
 
@@ -85,7 +90,11 @@ namespace Project1.MyGame
             cam.SetWorldMatrix(Matrix.CreateRotationX(-MathHelper.PiOver2));
 
             int aspectRatio = _world.Render.ScreenBounds.X / _world.Render.ScreenBounds.Y;
+#if SPECTATOR
+            cam.SetupProjection(_world.Render.ScreenBounds.X, _world.Render.ScreenBounds.Y, 100);
+#else
             cam.SetupOrthographic(aspectRatio * 15, 15, -50f, 50f);
+#endif
 
             var hud = _world.GetSystem<HudSystem>();
             _gui = new GolfingGUI(hud.Root);
@@ -109,7 +118,9 @@ namespace Project1.MyGame
                 _players[i] = _world.CreateEntity()
                     .AddComponent(new PositionComponent(Matrix.CreateTranslation(worldLoader.PlayerLocation)))
                     .AddComponent(new MeshComponent("models/sphere"))
+#if !SPECTATOR
                     .AddComponent(new EntityGolfingComponent(worldLoader.PlayerLocation, worldLoader.KillLevel.Y, $"Player {i+1}", _playerColors[i % _playerColors.Length]))
+#endif
                     .AddComponent(new PrimitivePhysicsComponent(RigidBody.Sphere, RigidBodyFlags.Dynamic, .08f, .5f));
                 _players[i].Position.SetLocalMatrix(Matrix.CreateScale(.40f));
                 var phyx = _players[i].GetComponent<PrimitivePhysicsComponent>();
@@ -125,8 +136,10 @@ namespace Project1.MyGame
                 _world.GetSystem<SoundSystem>().PlaySoundEffect("Audio/hit_wall");
         }
 
+
         private void ActivateCurrentPlayer()
         {
+#if !SPECTATOR
             if (_playersRemain == 0)
                 return;
 
@@ -146,10 +159,12 @@ namespace Project1.MyGame
 
             _gui.WorldName = $"{Path.GetFileNameWithoutExtension(_worlds[_currentWorld])} - {golf.Name}";
             _gui.StrokeCount = $"{_currentPlayer.GetComponent<EntityGolfingComponent>().Strokes} Stroke(s)";
+#endif
         }
 
         private void HoleCollision(int id, Vector3 pos)
         {
+#if !SPECTATOR
             for(int i = 0; i < _playerCount; i++)
             {
                 Entity player = _players[i];
@@ -176,10 +191,12 @@ namespace Project1.MyGame
                 }
                 LoadWorld();
             }
+#endif
         }
 
         public override void Update(GameTime gameTime)
         {
+#if !SPECTATOR
             EntityGolfingComponent golfBall = _currentPlayer.GetComponent<EntityGolfingComponent>();
             if (golfBall != null && golfBall.TurnComplete)
             {
@@ -187,6 +204,7 @@ namespace Project1.MyGame
                 _currentPlayerToGolf++;
                 ActivateCurrentPlayer();
             }
+#endif
 
             if (Input.IsNewKeyDown(Keys.Escape))
                 InvokeMainMenu?.Invoke();
