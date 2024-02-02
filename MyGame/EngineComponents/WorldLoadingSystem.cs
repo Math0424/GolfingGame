@@ -43,12 +43,12 @@ namespace Project1.MyGame
             string name = args[0];
             Vector3 pos = new Vector3(float.Parse(args[1]), float.Parse(args[3]), float.Parse(args[2]));
             Vector3 scale = new Vector3(float.Parse(args[4]), float.Parse(args[6]), float.Parse(args[5]));
-            Vector3 rotation = new Vector3(-float.Parse(args[7]), float.Parse(args[9]), -float.Parse(args[8]));
+            Vector3 rotation = -new Vector3(float.Parse(args[7]), float.Parse(args[9]), float.Parse(args[8]));
 
             Matrix localMatrix = Matrix.CreateScale(scale) *
-                            Matrix.CreateRotationX(MathHelper.ToRadians(rotation.X)) *
                             Matrix.CreateRotationZ(MathHelper.ToRadians(rotation.Z)) *
-                            Matrix.CreateRotationY(MathHelper.ToRadians(rotation.Y));
+                            Matrix.CreateRotationY(MathHelper.ToRadians(rotation.Y)) *
+                            Matrix.CreateRotationX(MathHelper.ToRadians(rotation.X));
             Matrix worldMatrix = localMatrix * Matrix.CreateTranslation(pos);
 
             PrimitivePhysicsComponent phyx;
@@ -69,6 +69,7 @@ namespace Project1.MyGame
                         .AddComponent(phyx);
                     break;
                 case "sphere":
+                    // dunno, just dont want spheres
                     // phyx = new PrimitivePhysicsComponent(RigidBody.Sphere, RigidBodyFlags.Static, scale.X);
                     // _world.CreateEntity()
                     //     .AddComponent(new PositionComponent(worldMatrix))
