@@ -14,12 +14,14 @@ namespace Project1.Engine.Systems
 {
     internal class RenderingSystem : SystemComponent, IDrawUpdate
     {
+        public static GraphicsDeviceManager _graphics;
+
         public Camera Camera { get; private set; }
         public Vector2 ScreenBounds { get; private set; }
         public Action DoDraw;
         public Action OnGraphicsReady;
 
-        private GraphicsDeviceManager _graphics;
+        private bool _graphicsReady;
         private GraphicsDevice _graphicsDevice;
         private BasicEffect _basicEffect;
         private SpriteFont _font;
@@ -39,22 +41,23 @@ namespace Project1.Engine.Systems
             _game = game;
             Camera = camera;
             _world = world;
-            _graphics = new GraphicsDeviceManager(game);
-            world.AddInjectedType(_graphics);
-            _graphics.DeviceCreated += GraphicInit;
-            _graphics.DeviceDisposing += StopGraphics;
 
+            _graphicsReady = false;
             _renderMessages = new List<RenderMessage>();
             _meshes = new Dictionary<string, Model>();
             _fonts = new Dictionary<string, SpriteFont>();
             _textures = new Dictionary<string, Texture2D>();
             _effects = new Dictionary<string, Effect>();
 
-        }
+            if (_graphics == null)
+            {
+                _graphics = new GraphicsDeviceManager(game);
+                _graphics.DeviceCreated += GraphicInit;
+            } 
+            else
+                GraphicInit(_graphics, null);
 
-        private void StopGraphics(object sender, EventArgs e)
-        {
-            Console.WriteLine($"Graphics Disposed");
+            world.AddInjectedType(_graphics);
         }
 
         private void GraphicInit(object sender, EventArgs e)
@@ -83,12 +86,16 @@ namespace Project1.Engine.Systems
             Camera.SetupProjection(_graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height, 90);
             //Camera.SetupOrthographic(_graphicsDevice.Viewport.Width / 20, _graphicsDevice.Viewport.Height / 20, -50, 50);
 
+            _graphicsReady = true;
             OnGraphicsReady?.Invoke();
         }
 
         // TODO move draw to a different thread away from the main gameloop
         public void Draw(GameTime delta)
         {
+            if (!_graphicsReady)
+                return;
+
             long timeNow = DateTime.Now.Ticks;
             _graphicsDevice.Clear(Color.CornflowerBlue);
 
@@ -316,6 +323,14 @@ namespace Project1.Engine.Systems
             {
                 _debugMode = !_debugMode;
             }
+        }
+
+        public override void Close()
+        {
+            _basicEffect.Dispose();
+            _debugSpriteBatch.Dispose();
+            _spriteBatch.Dispose();
+            _spriteEffect.Dispose();
         }
     }
 }

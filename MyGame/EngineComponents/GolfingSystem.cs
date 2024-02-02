@@ -23,7 +23,7 @@ namespace Project1.MyGame
         private WorldLoadingSystem _worldLoader;
 
         private int _worldId;
-        public string[] _levels = new[]
+        public string[] _levelRotation = new[]
         {
             "Worlds/world1.txt",
             "Worlds/world2.txt",
@@ -49,7 +49,7 @@ namespace Project1.MyGame
 
         private void LoadWorld(int id)
         {
-            _worldLoader.LoadWorld(_levels[id % _levels.Length]);
+            _worldLoader.LoadWorld(_levelRotation[id % _levelRotation.Length]);
             if (_player != null)
                 _player.GetComponent<PrimitivePhysicsComponent>().RigidBody.WorldMatrix = Matrix.CreateTranslation(_worldLoader.PlayerLocation);
             var hole = _world.GetEntity(_worldLoader.HoleId).GetComponent<PrimitivePhysicsComponent>();
@@ -77,7 +77,7 @@ namespace Project1.MyGame
             if (_player != null && _player.Id != -1)
             {
                 var physics = _player.GetComponent<PrimitivePhysicsComponent>();
-                _render.EnqueueMessage(new RenderMessageDrawText("Fonts/Debug", $"World: {_levels[_worldId % _levels.Length]}\nStrokes: {_strokes}", 20, 0, Vector2.One * 20, physics.IsSleeping ? Color.Azure : Color.Red));
+                _render.EnqueueMessage(new RenderMessageDrawText("Fonts/Debug", $"World: {_levelRotation[_worldId % _levelRotation.Length]}\nStrokes: {_strokes}", 20, 0, Vector2.One * 20, physics.IsSleeping ? Color.Azure : Color.Red));
 
                 var matrix = _cam.WorldMatrix;
                 matrix.Translation = _player.Position.Position;

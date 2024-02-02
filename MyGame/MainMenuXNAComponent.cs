@@ -12,35 +12,35 @@ using System.Threading.Tasks;
 
 namespace Project1.MyGame
 {
-    internal class MainMenuWorld : GameComponent, IDrawable
+    internal class MainMenuXNAComponent : GameComponent
     {
+        public Action<string, int> StartGame;
+
         private Game _game;
-        private World _menuWorld;
+        private World _world;
         private Camera _camera;
         private float yaw = 0;
-        public MainMenuWorld(Game game) : base(game)
+
+        public MainMenuXNAComponent(Game game) : base(game)
         {
-            _menuWorld = new World(game)
+            _game = game;
+            _world = new World(game)
                 .AddSystem<Camera>()
                 .AddSystem<RenderingSystem>()
                 .AddSystem<HudSystem>();
-            _camera = _menuWorld.GetSystem<Camera>();
-        }
-
-        public void LoadWorld(string world, int playerCount)
-        {
-            Console.WriteLine($"Starting {world ?? "null"} with {playerCount} players");
+            game.Components.Add(_world);
+            _camera = _world.GetSystem<Camera>();
         }
 
         public override void Initialize()
         {
-            var hud = _menuWorld.GetSystem<HudSystem>();
+            var hud = _world.GetSystem<HudSystem>();
 
             string[] worlds = Directory.GetFiles(Path.Combine(Game.Content.RootDirectory, "worlds"));
             var menu = new MainMenuGUI(hud.Root, worlds);
-            menu.StartGame += LoadWorld;
+            menu.StartGame += StartGame;
 
-            _menuWorld.CreateEntity()
+            _world.CreateEntity()
                 .AddComponent(new PositionComponent())
                 .AddComponent(new MeshComponent("Models/Sphere"));
 
@@ -53,13 +53,13 @@ namespace Project1.MyGame
                         continue;
                     float depth = (Math.Abs(j) + Math.Abs(i) + (float)r.NextDouble() * 2) - 1;
                     Matrix mat = Matrix.CreateScale(3, 10, 3) * Matrix.CreateTranslation(i * 3, -6.3f - depth, j * 3);
-                    _menuWorld.CreateEntity()
+                    _world.CreateEntity()
                         .AddComponent(new PositionComponent(Matrix.Identity, mat))
                         .AddComponent(new MeshComponent("Models/Cube", "Shaders/GroundShader"));
                 }
             }
 
-            _menuWorld.CreateEntity()
+            _world.CreateEntity()
                 .AddComponent(new PositionComponent(Matrix.CreateScale(3, 10, 3) * Matrix.CreateTranslation(0, -6.3f, 0)))
                 .AddComponent(new MeshComponent("Models/Cube", "Shaders/GroundShader"));
         }
@@ -70,14 +70,9 @@ namespace Project1.MyGame
         public event EventHandler<EventArgs> DrawOrderChanged;
         public event EventHandler<EventArgs> VisibleChanged;
 
-        public void Draw(GameTime gameTime)
-        {
-            _menuWorld.Draw(gameTime);
-        }
-
         public override void Update(GameTime gameTime)
         {
-            _menuWorld.Update(gameTime);
+            _world.Update(gameTime);
 
             yaw += .5f;
             Matrix m = Matrix.CreateFromYawPitchRoll(MathHelper.ToRadians(yaw), 0, 0) * 
@@ -87,7 +82,7 @@ namespace Project1.MyGame
 
         protected override void Dispose(bool disposing)
         {
-            _menuWorld.Close();
+            _world.Dispose();
             base.Dispose(disposing);
         }
 

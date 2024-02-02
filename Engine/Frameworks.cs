@@ -14,11 +14,6 @@ namespace Project1.Engine
         public virtual void Close() {}
     }
 
-    internal abstract class EntityUpdateComponent : EntityComponent
-    {
-        public abstract void Update(GameTime deltaTime);
-    }
-
     internal abstract class SystemComponent
     {
         public SystemComponent() { }

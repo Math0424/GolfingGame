@@ -13,10 +13,10 @@ using System.Threading.Tasks;
 
 namespace Project1.Engine
 {
-    internal class World
+    internal class World : GameComponent, IDrawable
     {
         public Action GameFocused;
-        public Game Game { private set; get; }
+        // public Game Game { private set; get; }
         public int EntityCount => _entities.Count;
 
         private SparceIndexedList<Entity> _entities;
@@ -25,9 +25,9 @@ namespace Project1.Engine
         private bool _focused;
         private InjectionContainer _injectionContainer;
 
-        public World(Game game) 
+        public World(Game game) : base(game)
         {
-            Game = game;
+            //Game = game;
             
             _focused = game.IsActive;
             _entities = new SparceIndexedList<Entity>();
@@ -43,6 +43,7 @@ namespace Project1.Engine
         /// Hot path for getting the render, will crash if none are loaded
         /// </summary>
         public RenderingSystem Render => (RenderingSystem)_systems[typeof(RenderingSystem)];
+
 
         public void AddInjectedType(object obj)
         {
@@ -129,7 +130,7 @@ namespace Project1.Engine
             _entities.Remove(id);
         }
 
-        public void Update(GameTime deltaTime)
+        public override void Update(GameTime deltaTime)
         {
             if (_focused != Game.IsActive)
             {
@@ -156,14 +157,25 @@ namespace Project1.Engine
             }
         }
 
-        public void Close()
+        protected override void Dispose(bool disposing)
         {
+            Console.WriteLine($"Closing world with {_entities.Count} entities, {_systems.Count} systems and, {_components.Count} registered components");
             foreach (var x in _systems.Values)
                 x.Close();
             foreach (var x in GetEntities())
                 x.Close();
             _entities.Clear();
+            _components.Clear();
+            _systems.Clear();
+            _injectionContainer = null;
+            base.Dispose(disposing);
         }
+
+
+        public event EventHandler<EventArgs> DrawOrderChanged;
+        public event EventHandler<EventArgs> VisibleChanged;
+        public int DrawOrder => 1;
+        public bool Visible => true;
 
 
     }

@@ -45,7 +45,8 @@ namespace Project1.Engine.Systems.GUI
 
         public void Draw(GameTime delta)
         {
-            Root.PreDraw((float)delta.ElapsedGameTime.TotalSeconds);
+            if (Root != null)
+                Root.PreDraw((float)delta.ElapsedGameTime.TotalSeconds);
         }
 
         public void DrawSprite(string sprite, Vector2I pos, Vector2I bounds, float depth)
@@ -67,13 +68,16 @@ namespace Project1.Engine.Systems.GUI
 
         public override void Update(GameTime delta)
         {
-            _hudInput = new HudInput()
+            if (Root != null)
             {
-                Captured = false,
-                Location = (Vector2I)Input.MousePosition(),
-            };
-            Root.PreHandleInput(ref _hudInput);
-            Root.PreLayout(false);
+                _hudInput = new HudInput()
+                {
+                    Captured = false,
+                    Location = (Vector2I)Input.MousePosition(),
+                };
+                Root.PreHandleInput(ref _hudInput);
+                Root.PreLayout(false);
+            }
         }
 
     }

@@ -15,18 +15,36 @@ namespace Project1
 {
     public class GolfGame : Game
     {
+        private MainMenuXNAComponent _mainMenu;
+        private GolfingGameXNAComponent _golfGame;
+
         public GolfGame()
         {
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
+            LoadMainMenu();
+        }
 
-            Components.Add(new MainMenuWorld(this));
+        public void LoadMainMenu()
+        {
+            _mainMenu = new MainMenuXNAComponent(this);
+            Components.Add(_mainMenu);
+            _mainMenu.StartGame += LoadIntoGame;
+        }
 
-            //_world = new World(this)
-            //    .AddSystem<Camera>()
-            //    .AddSystem<RenderingSystem>()
-            //    .AddSystem<PhysicsSystem>()
-            //    .AddSystem<HudSystem>();
+        public void LoadIntoGame(string worldName, int playerCount)
+        {
+            Components.Remove(_mainMenu);
+            _mainMenu.Dispose();
+
+            _golfGame = new GolfingGameXNAComponent(this, worldName, playerCount);
+            Components.Add(_golfGame);
+        }
+
+        public void LoadIntoMainMenu()
+        {
+            _golfGame.Dispose();
+            LoadMainMenu();
         }
 
         protected override void LoadContent()
@@ -36,11 +54,7 @@ namespace Project1
             //        .AddComponent(new MeshComponent("models/sphere"))
             //        .AddComponent(new PrimitivePhysicsComponent(RigidBody.Sphere, RigidBodyFlags.Dynamic, .08f, .5f));
             //ent.Position.SetLocalMatrix(Matrix.CreateScale(.40f));
-            //
             //_world.AddSystem<WorldLoadingSystem>();
-            // var hud = _world.GetSystem<HudSystem>();
-            // new MainMenuGUI(hud.Root);
-
 #if false
             _world.AddSystem<GolfingSystem>();
             _world.GetSystem<GolfingSystem>().SetPlayer(ent);
@@ -53,16 +67,11 @@ namespace Project1
 
         protected override void Update(GameTime gameTime)
         {
-            if (Input.IsKeyDown(Keys.Escape))
+            if (Input.IsKeyDown(Keys.F1))
                 Exit();
 
             base.Update(gameTime);
             Input.UpdateState();
-        }
-
-        protected override void Draw(GameTime gameTime)
-        {
-            base.Draw(gameTime);
         }
     }
 }

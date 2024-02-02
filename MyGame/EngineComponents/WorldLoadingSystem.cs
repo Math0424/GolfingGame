@@ -26,7 +26,7 @@ namespace Project1.MyGame
 
         public void LoadWorld(string path)
         {
-            string content = File.ReadAllText(Path.Combine(_world.Game.Content.RootDirectory, path));
+            string content = File.ReadAllText(Path.Combine(_world.Game.Content.RootDirectory, "..", path));
             Console.WriteLine($"Loading world {Path.GetFileName(path)}");
             string[] lines = content.Split("\n");
             Console.WriteLine($" | Loading {lines.Length} empties");
