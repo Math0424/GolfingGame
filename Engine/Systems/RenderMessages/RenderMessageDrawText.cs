@@ -13,7 +13,6 @@ namespace Project1.Engine.Systems.RenderMessages
         Centered,
     }
 
-
     internal class RenderMessageDrawText : RenderMessageDepth
     {
         public string Text { get; private set; }

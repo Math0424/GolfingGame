@@ -31,7 +31,7 @@ namespace Project1.Engine
                 return;
             
             Vector3 screen = graphics.Camera.WorldToScreen(worldPos);
-            graphics.EnqueueMessage(new RenderMessageDrawText("Fonts/Debug", text, 12, 1 / screen.Z, new Vector2(screen.X, screen.Y), color, options));
+            graphics.EnqueueMessage(new RenderMessageDrawText("Fonts/Debug", text, 1, 1 / screen.Z, new Vector2(screen.X, screen.Y), color, options));
         }
 
     }

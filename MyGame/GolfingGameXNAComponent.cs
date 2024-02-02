@@ -171,7 +171,7 @@ namespace Project1.MyGame
         public override void Update(GameTime gameTime)
         {
             EntityGolfingComponent golfBall = _currentPlayer.GetComponent<EntityGolfingComponent>();
-            if (golfBall.TurnComplete)
+            if (golfBall != null && golfBall.TurnComplete)
             {
                 golfBall.IsActive = false;
                 _currentPlayerToGolf++;

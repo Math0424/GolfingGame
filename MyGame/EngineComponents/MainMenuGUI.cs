@@ -1,4 +1,5 @@
-﻿using Project1.Engine;
+﻿using Microsoft.Xna.Framework;
+using Project1.Engine;
 using Project1.Engine.Systems.GUI;
 using System;
 using System.Collections.Generic;
@@ -27,6 +28,14 @@ namespace Project1.MyGame
         {
             Visible = true;
             _playerCount = 1;
+
+            var text = new HudText(this)
+            {
+                Text = "Golfing Game",
+                TextScale = 3,
+                TextColor = Color.White,
+            };
+            text.Position = text.Position - new Vector2I(0, 180);
 
             _sourceCodeBtn = new HudTextButton(this)
             {
@@ -71,7 +80,7 @@ namespace Project1.MyGame
                     Bounds = new Vector2I(100, 40),
                     Visible = false,
                     Padding = 10,
-                    ParentAlignment = ParentAlignments.Top | ParentAlignments.Right | ParentAlignments.InnerH | ParentAlignments.Padding,
+                    ParentAlignment = ParentAlignments.Top | ParentAlignments.Right | ParentAlignments.InnerV | ParentAlignments.Padding,
                 };
                 _levelSelectBtns[i].Position -= new Vector2I(0, i * 50);
                 _levelSelectBtns[i].OnLeftClicked += (e) =>

@@ -302,10 +302,10 @@ namespace Project1.Engine.Systems
                         if (drawText.DrawOptions == TextDrawOptions.Centered)
                         {
                             Vector2 width = _fonts[drawText.Font].MeasureString(drawText.Text);
-                            _spriteBatch.DrawString(_fonts[drawText.Font], drawText.Text, drawText.Pos - width/2, drawText.Color);
+                            _spriteBatch.DrawString(_fonts[drawText.Font], drawText.Text, drawText.Pos, drawText.Color, 0, width / 2, drawText.Scale, SpriteEffects.None, 0);
                         }
                         else
-                            _spriteBatch.DrawString(_fonts[drawText.Font], drawText.Text, drawText.Pos, drawText.Color);
+                            _spriteBatch.DrawString(_fonts[drawText.Font], drawText.Text, drawText.Pos, drawText.Color, 0, Vector2.Zero, drawText.Scale, SpriteEffects.None, 0);
                         break;
                 }
             }

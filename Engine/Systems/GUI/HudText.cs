@@ -19,7 +19,7 @@ namespace Project1.Engine.Systems.GUI
         public HudText(HudElement parent) : base(parent)
         {
             TextColor = Color.Black;
-            TextScale = 12;
+            TextScale = 1;
             Text = "HudText";
             TextOptions = TextDrawOptions.Centered;
         }
